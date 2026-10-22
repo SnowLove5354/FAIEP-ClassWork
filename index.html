@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="日历展示平台：大日历视图、商务日程与主题日历同屏展示，实时时钟与星期主题切换">
+<meta name="theme-color" content="#0f2027">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%85%3C/text%3E%3C/svg%3E">
+<title>日历展示平台</title>
+<style>
+/* ============ 全局 ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow-x:hidden;background:#f0f2f5;color:#333;}
+
+/* ============ 入场等待动画 ============ */
+#loader{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 50%,#7e57c2 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease;}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.loader-ring{width:80px;height:80px;position:relative;}
+.loader-ring::before,.loader-ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:4px solid rgba(255,255,255,.15);}
+.loader-ring::after{border-top-color:#fff;border-right-color:#fff;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-text{margin-top:28px;color:#fff;font-size:18px;letter-spacing:4px;font-weight:300;animation:pulse 1.6s ease-in-out infinite;}
+.loader-subtext{margin-top:10px;color:rgba(255,255,255,.6);font-size:13px;letter-spacing:2px;}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ============ 顶栏 ============ */
+.topbar{background:linear-gradient(90deg,#0f2027,#203a43,#2c5364);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;box-shadow:0 2px 12px rgba(0,0,0,.15);position:relative;z-index:10;}
+.topbar .brand{font-size:18px;font-weight:600;letter-spacing:2px;display:flex;align-items:center;gap:10px;}
+.topbar .brand .dot{width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar .realtime{text-align:center;flex:1;}
+.topbar .realtime .date-str{font-size:14px;opacity:.85;letter-spacing:1px;}
+.topbar .realtime .time-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:2px;flex-wrap:wrap;}
+.topbar .realtime .time-str{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:2px;}
+/* 教学周徽章：紧邻实时时间右侧 */
+.topbar .realtime .term-badge{font-size:12px;font-weight:600;letter-spacing:1px;padding:5px 13px;border-radius:20px;white-space:nowrap;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;transition:all .3s ease;}
+.topbar .realtime .term-badge.in{background:linear-gradient(90deg,#4ade80,#22d3ee);color:#053225;border-color:transparent;box-shadow:0 0 14px rgba(74,222,128,.45);}
+.topbar .realtime .term-badge.off{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.18);}
+.topbar .realtime .week-str{font-size:13px;opacity:.7;letter-spacing:2px;margin-top:2px;}
+.topbar-spacer{width:180px;flex:0 0 180px;}
+
+/* ============ 大日历视图（独立板块） ============ */
+.big-calendar{background:#fff;margin:14px auto 0;padding:14px 18px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.06);max-width:1600px;}
+.big-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+.big-cal-title{font-size:16px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;}
+.big-cal-title .tag{font-size:11px;background:linear-gradient(90deg,var(--cal-a-color,#3b82f6),#8b5cf6);color:#fff;padding:2px 10px;border-radius:10px;font-weight:500;letter-spacing:1px;}
+.big-cal-nav{display:flex;gap:4px;}
+.big-cal-nav button{background:#f1f5f9;border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;color:#475569;transition:.2s;font-weight:600;}
+.big-cal-nav button.today-btn{width:auto;padding:0 12px;font-size:12px;}
+.big-cal-nav button:hover{background:var(--cal-a-color,#3b82f6);color:#fff;}
+.big-cal-month{font-size:14px;color:#475569;font-weight:500;}
+
+.big-weekdays,.big-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.big-weekdays{margin-bottom:4px;}
+.big-weekdays div{text-align:center;font-size:11px;color:#94a3b8;font-weight:600;padding:4px 0;letter-spacing:1px;}
+.big-weekdays div.wk{color:#ef4444;}
+.big-weekdays div.we{color:var(--cal-a-color,#3b82f6);}
+.big-days .day{aspect-ratio:3/1;display:flex;flex-direction:column;padding:3px 6px;border-radius:7px;cursor:pointer;position:relative;transition:all .25s cubic-bezier(.4,0,.2,1);border:2px solid transparent;background:#fafbfc;}
+.big-days .day:hover{background:#eff6ff;transform:translateY(-1px);box-shadow:0 4px 10px rgba(59,130,246,.12);}
+.big-days .day.other-month{opacity:.3;background:transparent;}
+.big-days .day.today{background:linear-gradient(135deg,var(--cal-a-color,#3b82f6),#6366f1);color:#fff;box-shadow:0 3px 10px rgba(59,130,246,.3);}
+.big-days .day.today .dnum{color:#fff;font-weight:700;}
+.big-days .day.today .dwk{color:rgba(255,255,255,.8);}
+.big-days .day.today .dbar .b-a{background:#fff;}
+.big-days .day.today .dbar .b-b{background:rgba(255,255,255,.7);}
+.big-days .day.selected{border-color:var(--cal-a-color,#3b82f6);background:#eff6ff;transform:translateY(-1px);box-shadow:0 4px 10px rgba(59,130,246,.15);}
+.big-days .day .dnum{font-size:13px;font-weight:600;line-height:1;}
+.big-days .day .dwk{font-size:8px;color:#94a3b8;margin-top:1px;letter-spacing:1px;}
+.big-days .day.today .dwk{color:rgba(255,255,255,.8);}
+.big-days .day .dbar{position:absolute;bottom:3px;left:6px;right:6px;display:flex;gap:2px;}
+.big-days .day .dbar .b-a{width:100%;height:2px;border-radius:1px;background:var(--cal-a-color,#3b82f6);}
+.big-days .day .dbar .b-b{width:100%;height:2px;border-radius:1px;background:var(--cal-b-accent,#e11d48);}
+.big-days .day .dbar .b-none{flex:1;}
+.big-days .day .cnt-a,.big-days .day .cnt-b{position:absolute;top:2px;right:4px;font-size:9px;font-weight:700;padding:0 4px;border-radius:6px;color:#fff;line-height:14px;}
+.big-days .day .cnt-a{background:var(--cal-a-color,#3b82f6);}
+.big-days .day .cnt-b{background:var(--cal-b-accent,#e11d48);top:2px;right:20px;}
+.big-days .day.today .cnt-a,.big-days .day.today .cnt-b{background:#fff;color:var(--cal-a-color,#3b82f6);}
+
+/* ============ 下方双栏布局 ============ */
+.dual-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px;max-width:1600px;margin:0 auto;}
+
+/* ============ 日历A：商务日程 ============ */
+.calendar-a{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:24px;display:flex;flex-direction:column;}
+.cal-a-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-a-title{font-size:18px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:10px;}
+.cal-a-title .tag{font-size:12px;background:var(--cal-a-color,#3b82f6);color:#fff;padding:3px 10px;border-radius:12px;font-weight:500;}
+.cal-a-date{font-size:15px;color:#64748b;font-weight:500;}
+.cal-a-date .big-day{font-size:32px;font-weight:800;color:var(--cal-a-color,#3b82f6);margin-right:8px;line-height:1;}
+
+.cal-a-events{flex:1;overflow-y:auto;max-height:520px;}
+.cal-a-summary{background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:14px 16px;border-radius:12px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.cal-a-summary .icon{font-size:28px;}
+.cal-a-summary .info{flex:1;}
+.cal-a-summary .info .label{font-size:12px;color:#64748b;}
+.cal-a-summary .info .count{font-size:22px;font-weight:700;color:#1e40af;}
+
+.cal-a-event-item{background:linear-gradient(90deg,#eff6ff,#fff);border-left:3px solid var(--cal-a-color,#3b82f6);padding:12px 14px;border-radius:8px;margin-bottom:8px;animation:slideIn .4s ease;transition:.2s;}
+.cal-a-event-item:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(59,130,246,.12);}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+.cal-a-event-item .ev-title{font-size:15px;font-weight:600;color:#1e293b;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+.cal-a-event-item .ev-title .time-tag{font-size:11px;font-weight:500;background:var(--cal-a-color,#3b82f6);color:#fff;padding:2px 7px;border-radius:6px;}
+.cal-a-event-item .ev-meta{font-size:12px;color:#64748b;display:flex;gap:12px;flex-wrap:wrap;}
+.no-events{font-size:13px;color:#cbd5e1;text-align:center;padding:50px 20px;}
+.no-events .big{font-size:40px;margin-bottom:8px;opacity:.6;}
+
+/* ============ 日历B：主题日历（右半，内部两等分竖列：左=插图，右=日程） ============ */
+.calendar-b{border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);display:grid;grid-template-columns:1fr 1fr;min-height:620px;transition:background .8s ease;background:#fff;}
+
+/* B左竖列：星期日期切换按钮 + 9:16 主题插图 */
+.cal-b-piccol{display:flex;flex-direction:column;overflow:hidden;background:#0f172a;min-width:0;transition:background .8s ease;}
+.cal-b-wdstrip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:10px 8px;background:rgba(0,0,0,.28);}
+.cal-b-wdstrip .wd-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 2px 5px;border-radius:9px;cursor:pointer;background:rgba(255,255,255,.11);color:#fff;border:2px solid transparent;transition:all .35s cubic-bezier(.4,0,.2,1);min-width:0;font-family:inherit;}
+.cal-b-wdstrip .wd-btn:hover{background:rgba(255,255,255,.24);transform:translateY(-2px);}
+.cal-b-wdstrip .wd-btn.active{background:#fff;color:var(--theme-color,#e11d48);transform:scale(1.06);box-shadow:0 4px 14px rgba(0,0,0,.35);}
+.cal-b-wdstrip .wd-btn .wn{font-size:10px;letter-spacing:1px;opacity:.85;white-space:nowrap;}
+.cal-b-wdstrip .wd-btn .dn{font-size:16px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.cal-b-wdstrip .wd-btn .dot{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:0;}
+.cal-b-wdstrip .wd-btn.today .dot{opacity:.95;}
+
+.cal-b-picwrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:14px;overflow:hidden;transition:background .8s ease;}
+.cal-b-picbox{position:relative;aspect-ratio:9/16;height:100%;max-width:100%;border-radius:14px;overflow:hidden;box-shadow:0 12px 34px rgba(0,0,0,.45);background:rgba(0,0,0,.2);}
+.cal-b-pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .7s ease,transform .7s ease;}
+.cal-b-pic.swap{opacity:0;transform:scale(1.08);}
+
+/* B右竖列：日历详情 */
+.cal-b-detailcol{display:flex;flex-direction:column;overflow:hidden;background:#fff;min-width:0;transition:background .6s ease;}
+.cal-b-dhead{padding:16px 18px 13px;border-bottom:1px solid #eef2f7;transition:border-color .6s ease;}
+.cal-b-dtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.cal-b-dtitle{font-size:15px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;}
+.cal-b-dtitle .tag{font-size:11px;background:var(--theme-bg,#fff1f2);color:var(--theme-color,#e11d48);padding:3px 9px;border-radius:10px;font-weight:600;transition:all .5s;}
+.cal-b-dcount{font-size:11px;background:var(--theme-bg,#fff1f2);color:var(--theme-color,#e11d48);padding:3px 10px;border-radius:10px;font-weight:700;transition:all .5s;}
+.cal-b-dbig{display:flex;align-items:baseline;gap:10px;}
+.cal-b-dbig .num{font-size:42px;font-weight:800;line-height:1;color:var(--theme-color,#e11d48);transition:color .5s;font-variant-numeric:tabular-nums;}
+.cal-b-dbig .txt{font-size:13px;color:#64748b;line-height:1.6;}
+.cal-b-dbig .txt .wk{font-weight:700;color:#334155;}
+.cal-b-dlist{flex:1;overflow-y:auto;padding:12px 14px;}
+.cal-b-event-card{padding:10px 12px;border-radius:10px;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start;border-left:4px solid var(--theme-color,#e11d48);background:var(--theme-bg,#fff1f2);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);transition:background .5s ease,border-color .5s ease,transform .2s;}
+.cal-b-event-card:hover{transform:translateX(3px);}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.cal-b-event-card .ev-time{font-size:12px;font-weight:700;color:var(--theme-color,#e11d48);min-width:52px;transition:color .5s;}
+.cal-b-event-card .ev-body{flex:1;min-width:0;}
+.cal-b-event-card .ev-body .ev-t{font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-b-event-card .ev-body .ev-m{font-size:11px;color:#64748b;margin-top:2px;}
+
+/* ============ 移动端 ============ */
+@media(max-width:960px){
+  .topbar{padding:12px 16px;}
+  .topbar-spacer{display:none;}
+  .topbar .realtime .time-str{font-size:22px;}
+  .topbar .realtime .time-row{gap:8px;}
+  .topbar .realtime .term-badge{font-size:10px;padding:3px 9px;letter-spacing:0;}
+  .topbar .brand{font-size:15px;}
+  .big-calendar{margin:8px 8px 0;padding:10px 12px;border-radius:12px;}
+  .big-days .day{padding:3px 5px;aspect-ratio:2.2/1;}
+  .big-days .day .dnum{font-size:12px;}
+  .big-days .day .dwk{display:none;}
+  .big-days .day .dbar{left:4px;right:4px;bottom:2px;}
+  .big-days .day .cnt-a,.big-days .day .cnt-b{font-size:8px;padding:0 3px;line-height:12px;top:2px;right:3px;}
+  .big-days .day .cnt-b{right:18px;}
+  .big-weekdays div{padding:3px 0;font-size:10px;}
+  .big-cal-header{margin-bottom:6px;}
+  .big-cal-title{font-size:14px;}
+  .dual-panel{grid-template-columns:1fr;padding:8px;gap:10px;margin-top:4px;}
+  .calendar-a{padding:18px;}
+  .calendar-b{grid-template-columns:1fr;min-height:auto;}
+  .cal-b-piccol{height:470px;min-height:0;}
+  .cal-b-picwrap{padding:12px;}
+  .cal-b-wdstrip{padding:8px 6px;gap:3px;}
+  .cal-b-wdstrip .wd-btn .wn{font-size:9px;letter-spacing:0;}
+  .cal-b-wdstrip .wd-btn .dn{font-size:14px;}
+  .cal-b-dhead{padding:14px;}
+  .cal-b-dbig .num{font-size:34px;}
+  .cal-b-dlist{max-height:320px;}
+  .cal-a-events{max-height:360px;}
+}
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+/* 日程详情浮窗 */
+.detail-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;animation:diFade .2s ease;}
+.detail-mask.show{display:flex;}
+@keyframes diFade{from{opacity:0}to{opacity:1}}
+.detail-card{background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 16px 48px rgba(0,0,0,.25);overflow:hidden;animation:diUp .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes diUp{from{transform:translateY(24px) scale(.96);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.detail-head{padding:20px 22px 14px;color:#fff;position:relative;}
+.detail-head .di-cat{font-size:12px;opacity:.85;letter-spacing:1px;margin-bottom:8px;}
+.detail-head .di-title{font-size:20px;font-weight:700;line-height:1.35;word-break:break-word;}
+.detail-head .di-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;line-height:26px;}
+.detail-head .di-close:hover{background:rgba(255,255,255,.35);}
+.detail-body{padding:18px 22px 22px;}
+.di-row{display:flex;gap:12px;padding:10px 0;font-size:14px;color:#1f2329;align-items:flex-start;}
+.di-row + .di-row{border-top:1px solid #f4f5f7;}
+.di-row .di-k{width:68px;color:#8a9099;flex-shrink:0;font-size:13px;padding-top:1px;}
+.di-row .di-v{flex:1;word-break:break-word;line-height:1.6;}
+.di-allday{background:#fff7e6;color:#ad6800;padding:2px 8px;border-radius:4px;font-size:12px;display:inline-block;}
+.di-desc{white-space:pre-wrap;color:#4e5969;font-size:13px;line-height:1.7;margin-top:4px;}
+.cal-a-event-item{cursor:pointer;}
+.cal-a-event-item:hover{background:#f8fafc;}
+.cal-b-event-card{cursor:pointer;}
+@media (max-width:600px){
+  .detail-card{max-width:100%;border-radius:12px;}
+  .detail-head{padding:18px 18px 12px;}
+  .detail-body{padding:14px 18px 18px;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- 入场等待 -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">CALENDAR</div>
+  <div class="loader-subtext">正在加载日历数据…</div>
+</div>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>日历展示中心</div>
+  <div class="realtime">
+    <div class="date-str" id="dateStr"></div>
+    <div class="time-row">
+      <span class="time-str" id="timeStr"></span>
+      <span class="term-badge" id="termBadge" style="display:none;"></span>
+    </div>
+    <div class="week-str" id="weekStr"></div>
+  </div>
+  <div class="topbar-spacer"></div>
+</div>
+
+<!-- 大日历视图（独立板块） -->
+<div class="big-calendar">
+  <div class="big-cal-header">
+    <div class="big-cal-title">🗓 大日历视图 <span class="tag">点击日期切换详情</span></div>
+    <div class="big-cal-month" id="bigCalMonth"></div>
+    <div class="big-cal-nav">
+      <button onclick="changeBigMonth(-1)">‹</button>
+      <button class="today-btn" onclick="gotoToday()">今天</button>
+      <button onclick="changeBigMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="big-weekdays">
+    <div class="wk">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="we">六</div>
+  </div>
+  <div class="big-days" id="bigDays"></div>
+</div>
+
+<!-- 双栏详情 -->
+<div class="dual-panel">
+
+  <!-- 日历A 商务日程 -->
+  <div class="calendar-a" id="calA">
+    <div class="cal-a-header">
+      <div class="cal-a-title" id="calATitle">📅 日历A <span class="tag">商务日程</span></div>
+    </div>
+    <div class="cal-a-date" id="calADateHead"></div>
+    <div class="cal-a-summary" id="calASummary"></div>
+    <div class="cal-a-events" id="calAEvents"></div>
+  </div>
+
+  <!-- 日历B 主题日历 -->
+  <div class="calendar-b" id="calB" style="--theme-color:#e11d48;--theme-bg:#fff1f2;">
+    <!-- 左竖列：星期日期切换按钮 + 主题插图 -->
+    <div class="cal-b-piccol" id="calBPicCol">
+      <div class="cal-b-wdstrip" id="calBWdstrip"></div>
+      <div class="cal-b-picwrap" id="calBPicWrap">
+        <div class="cal-b-picbox" id="calBPicBox">
+          <img class="cal-b-pic" id="calBPic" src="" alt="本周主题插图">
+        </div>
+      </div>
+    </div>
+    <!-- 右竖列：日历详情 -->
+    <div class="cal-b-detailcol">
+      <div class="cal-b-dhead">
+        <div class="cal-b-dtop">
+          <div class="cal-b-dtitle" id="calBTitle">🎨 日历B <span class="tag">主题日历</span></div>
+          <span class="cal-b-dcount" id="calBEventCount"></span>
+        </div>
+        <div class="cal-b-dbig">
+          <span class="num" id="calBDateLabel"></span>
+          <span class="txt"><span class="wk" id="calBWeekLabel"></span><br><span id="calBMonthLabel"></span></span>
+        </div>
+      </div>
+      <div class="cal-b-dlist" id="calBEvents"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============ 数据 ============ */
+const STORAGE_KEY = 'calendar_events_v1';
+function loadEvents(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){return [];}
+}
+
+/* ============ 重复规则展开：判断某条日程是否在指定日期发生 ============ */
+function matchRepeat(ev,dateStr){
+  const base=ev.date;
+  const r=ev.repeat;
+  if(!base)return false;
+  if(!r||r==='none')return base===dateStr;
+  if(dateStr<base)return false;
+  const start=new Date(base+'T00:00:00');
+  const cur=new Date(dateStr+'T00:00:00');
+  if(isNaN(start.getTime())||isNaN(cur.getTime()))return base===dateStr;
+  const diffDays=Math.round((cur-start)/86400000);
+  if(diffDays<0)return false;
+  if(r==='daily')return true;
+  if(r==='workday'){const w=cur.getDay();return w>=1&&w<=5;}
+  if(r==='weekly')return diffDays%7===0;
+  if(r==='monthly')return cur.getDate()===start.getDate();
+  if(r==='yearly')return cur.getDate()===start.getDate()&&cur.getMonth()===start.getMonth();
+  if(r.indexOf('custom:')===0){
+    let o=null;
+    try{o=JSON.parse(r.slice(7));}catch(e){return base===dateStr;}
+    const interval=Math.max(1,parseInt(o.interval,10)||1);
+    const unit=o.unit||'week';
+    let idx=-1;
+    if(unit==='day'){
+      if(diffDays%interval!==0)return false;
+      idx=diffDays/interval;
+    }else if(unit==='week'){
+      const step=interval*7;
+      if(diffDays%step!==0)return false;
+      idx=diffDays/step;
+    }else if(unit==='month'){
+      const md=(cur.getFullYear()-start.getFullYear())*12+(cur.getMonth()-start.getMonth());
+      if(md<0||md%interval!==0||cur.getDate()!==start.getDate())return false;
+      idx=md/interval;
+    }else if(unit==='year'){
+      const yd=cur.getFullYear()-start.getFullYear();
+      if(yd<0||yd%interval!==0||cur.getMonth()!==start.getMonth()||cur.getDate()!==start.getDate())return false;
+      idx=yd/interval;
+    }else{return base===dateStr;}
+    if(o.endType==='count'){const n=parseInt(o.count,10)||1;return (idx+1)<=n;}
+    if(o.endType==='until'){return o.until?dateStr<=o.until:true;}
+    return true;
+  }
+  return base===dateStr;
+}
+function getEventsOf(dateStr,calId){
+  return loadEvents().filter(e=>matchRepeat(e,dateStr)&&(!calId||e.calendarId===calId));
+}
+
+/* ============ 时钟 ============ */
+const weekCN=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+function tickClock(){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate();
+  const h=String(now.getHours()).padStart(2,'0');
+  const mi=String(now.getMinutes()).padStart(2,'0');
+  const s=String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('timeStr').textContent=`${h}:${mi}:${s}`;
+  document.getElementById('dateStr').textContent=`${y}年${m}月${d}日`;
+  document.getElementById('weekStr').textContent=weekCN[now.getDay()];
+  updateTermBadge();
+}
+setInterval(tickClock,1000);tickClock();
+
+/* ============ 教学周（读取管理页设定的教学周区间） ============ */
+const TERM_KEY='calendar_term_v1';
+function loadTerm(){try{return JSON.parse(localStorage.getItem(TERM_KEY))||null;}catch(e){return null;}}
+function ymdIndex(y,m,d){return Math.round(new Date(y,m-1,d).getTime()/86400000);}
+function parseYMDText(s){
+  const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  return m?{y:+m[1],m:+m[2],d:+m[3]}:null;
+}
+function getTeachingWeek(){
+  const t=loadTerm();
+  if(!t||!t.startDate)return null;
+  const sd=parseYMDText(t.startDate);
+  if(!sd)return null;
+  const now=new Date();
+  const diff=ymdIndex(now.getFullYear(),now.getMonth()+1,now.getDate())-ymdIndex(sd.y,sd.m,sd.d);
+  const week=Math.floor(diff/7)+1;
+  let total=0;
+  const ed=t.endDate?parseYMDText(t.endDate):null;
+  if(ed)total=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
+  let state='in';
+  if(week<1)state='before';
+  else if(total&&week>total)state='after';
+  return {week:week,total:total,state:state};
+}
+function updateTermBadge(){
+  const el=document.getElementById('termBadge');
+  if(!el)return;
+  const w=getTeachingWeek();
+  if(!w||!w.total){el.style.display='none';return;}
+  el.style.display='';
+  if(w.state==='in'){el.className='term-badge in';el.textContent='第 '+w.week+' 教学周';}
+  else if(w.state==='before'){el.className='term-badge off';el.textContent='未开学';}
+  else{el.className='term-badge off';el.textContent='假期中';}
+}
+
+/* ============ 主题配置（日历B） ============ */
+const THEMES=[
+  {name:'周日',short:'日',color:'#f59e0b',bg:'#fef3c7',gradient:'linear-gradient(135deg,#f6d365,#fda085)',img:'https://gips1.baidu.com/it/u=3426953913,2602936109&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周一',short:'一',color:'#2563eb',bg:'#dbeafe',gradient:'linear-gradient(135deg,#1e3c72,#2a5298)',img:'https://gips3.baidu.com/it/u=187311376,3321382880&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周二',short:'二',color:'#ea580c',bg:'#ffedd5',gradient:'linear-gradient(135deg,#f59e0b,#ea580c)',img:'https://gips2.baidu.com/it/u=222082125,885693681&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周三',short:'三',color:'#16a34a',bg:'#dcfce7',gradient:'linear-gradient(135deg,#11998e,#38ef7d)',img:'https://gips1.baidu.com/it/u=3063342635,2708302195&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周四',short:'四',color:'#7c3aed',bg:'#ede9fe',gradient:'linear-gradient(135deg,#5f2c82,#49a09d)',img:'https://gips0.baidu.com/it/u=4008482774,3350441090&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周五',short:'五',color:'#e11d48',bg:'#ffe4e6',gradient:'linear-gradient(135deg,#ec4899,#f43f5e)',img:'https://gips0.baidu.com/it/u=596943118,1642531063&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+  {name:'周六',short:'六',color:'#0284c7',bg:'#e0f2fe',gradient:'linear-gradient(135deg,#4facfe,#00f2fe)',img:'https://gips2.baidu.com/it/u=879315578,1992116744&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
+];
+
+/* ============ 日历美化同步（读取管理页「日历美化」设置） ============ */
+const BEAUTY_KEY='calendar_beauty_v1';
+const THEMES_DEFAULT=THEMES.map(t=>({...t}));
+function loadBeauty(){try{return JSON.parse(localStorage.getItem(BEAUTY_KEY))||null;}catch(e){return null;}}
+function applyTitleName(elId,prefix,name,defTag){
+  const el=document.getElementById(elId);if(!el)return;
+  const nm=String(name||'').trim();
+  if(nm&&nm.indexOf('·')>-1){
+    const i=nm.indexOf('·');
+    el.innerHTML=prefix+' '+escapeHtml(nm.slice(0,i).trim())+' <span class="tag">'+escapeHtml(nm.slice(i+1).trim())+'</span>';
+  }else if(nm){
+    el.innerHTML=prefix+' '+escapeHtml(nm);
+  }else{
+    el.innerHTML=prefix+' <span class="tag">'+defTag+'</span>';
+  }
+}
+function applyBeauty(){
+  for(let i=0;i<THEMES.length;i++)Object.assign(THEMES[i],THEMES_DEFAULT[i]);
+  const b=loadBeauty();
+  const aColor=(b&&b.calA&&b.calA.color)||'#3b82f6';
+  const bAccent=(b&&b.calB&&b.calB.accent)||'#e11d48';
+  const root=document.documentElement;
+  root.style.setProperty('--cal-a-color',aColor);
+  root.style.setProperty('--cal-b-accent',bAccent);
+  if(b&&Array.isArray(b.themes)){
+    b.themes.forEach((t,i)=>{
+      if(!THEMES[i]||!t)return;
+      if(t.color)THEMES[i].color=t.color;
+      if(t.bg)THEMES[i].bg=t.bg;
+      if(t.gradient)THEMES[i].gradient=t.gradient;
+      if(t.img)THEMES[i].img=t.img;
+    });
+  }
+  applyTitleName('calATitle','📅',b&&b.calA&&b.calA.name,'商务日程');
+  applyTitleName('calBTitle','🎨',b&&b.calB&&b.calB.name,'主题日历');
+}
+
+/* ============ 全局选中日期 ============ */
+let bigCurMonth=new Date();bigCurMonth.setDate(1);
+let selectedDate=new Date();
+
+/* ============ 大日历渲染 ============ */
+function renderBigCalendar(){
+  const year=bigCurMonth.getFullYear(),month=bigCurMonth.getMonth();
+  document.getElementById('bigCalMonth').textContent=`${year} 年 ${month+1} 月`;
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const prevMonthDays=new Date(year,month,0).getDate();
+  const today=new Date();
+  const allEvs=loadEvents();
+  const cntOf=ds=>{
+    let a=0,b=0;
+    for(let i=0;i<allEvs.length;i++){
+      const e=allEvs[i];
+      if(!matchRepeat(e,ds))continue;
+      if(e.calendarId==='A')a++;else b++;
+    }
+    return {a:a,b:b};
+  };
+  const selStr=formatDate(selectedDate);
+  const daysEl=document.getElementById('bigDays');
+  daysEl.innerHTML='';
+  for(let i=firstDay-1;i>=0;i--){
+    const d=prevMonthDays-i;
+    const pm=new Date(year,month-1,d);
+    const ds=formatDate(pm);
+    const cnt=cntOf(ds);
+    daysEl.innerHTML+=`<div class="day other-month" data-date="${ds}" onclick="selectDate('${ds}')">
+      <span class="dnum">${d}</span>
+      ${(cnt.a||cnt.b)?`<div class="dbar">${cnt.a?'<div class="b-a"></div>':'<div class="b-none"></div>'}${cnt.b?'<div class="b-b"></div>':'<div class="b-none"></div>'}</div>`:''}
+    </div>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+    const isSel=ds===selStr;
+    const cnt=cntOf(ds);
+    const wk=new Date(year,month,d).getDay();
+    const wkN=['日','一','二','三','四','五','六'][wk];
+    let badges='';
+    if(cnt.a)badges+=`<span class="cnt-a">${cnt.a}</span>`;
+    if(cnt.b)badges+=`<span class="cnt-b">${cnt.b}</span>`;
+    let bar='';
+    if(cnt.a||cnt.b)bar=`<div class="dbar">${cnt.a?'<div class="b-a"></div>':'<div class="b-none"></div>'}${cnt.b?'<div class="b-b"></div>':'<div class="b-none"></div>'}</div>`;
+    daysEl.innerHTML+=`<div class="day ${isToday?'today':''} ${isSel?'selected':''}" data-date="${ds}" onclick="selectDate('${ds}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="dnum">${d}</span>
+        ${badges}
+      </div>
+      <span class="dwk">${wkN}</span>
+      ${bar}
+    </div>`;
+  }
+  const totalCells=firstDay+daysInMonth;
+  const trailing=(7-totalCells%7)%7;
+  for(let i=1;i<=trailing;i++){
+    const nm=new Date(year,month+1,i);
+    const ds=formatDate(nm);
+    const cnt=cntOf(ds);
+    daysEl.innerHTML+=`<div class="day other-month" data-date="${ds}" onclick="selectDate('${ds}')">
+      <span class="dnum">${i}</span>
+      ${(cnt.a||cnt.b)?`<div class="dbar">${cnt.a?'<div class="b-a"></div>':'<div class="b-none"></div>'}${cnt.b?'<div class="b-b"></div>':'<div class="b-none"></div>'}</div>`:''}
+    </div>`;
+  }
+}
+function changeBigMonth(delta){
+  bigCurMonth.setMonth(bigCurMonth.getMonth()+delta);
+  renderBigCalendar();
+}
+function gotoToday(){
+  const t=new Date();
+  bigCurMonth=new Date(t.getFullYear(),t.getMonth(),1);
+  selectedDate=t;
+  renderAll();
+}
+function selectDate(ds){
+  const [y,m,d]=ds.split('-').map(Number);
+  const nd=new Date(y,m-1,d);
+  // 如果点的是非当前显示月份，切换月份
+  if(nd.getMonth()!==bigCurMonth.getMonth()||nd.getFullYear()!==bigCurMonth.getFullYear()){
+    bigCurMonth=new Date(y,m-1,1);
+  }
+  selectedDate=nd;
+  renderAll();
+}
+
+/* ============ 日历A 渲染 ============ */
+function renderCalA(){
+  const ds=formatDate(selectedDate);
+  const d=selectedDate;
+  const wd=weekCN[d.getDay()];
+  document.getElementById('calADateHead').innerHTML=`<span class="big-day">${d.getDate()}</span>${d.getFullYear()}年${d.getMonth()+1}月 · ${wd}`;
+  const evs=getEventsOf(ds,'A').sort((a,b)=>(a.startTime||'').localeCompare(b.startTime||''));
+  document.getElementById('calASummary').innerHTML=`
+    <div class="icon">📅</div>
+    <div class="info">
+      <div class="label">商务日程安排</div>
+      <div class="count">${evs.length} 项</div>
+    </div>
+    <div style="font-size:36px;opacity:.3;">${evs.length?'📋':'📭'}</div>`;
+  const box=document.getElementById('calAEvents');
+  if(!evs.length){
+    box.innerHTML=`<div class="no-events"><div class="big">📭</div><div>今日暂无商务日程</div></div>`;
+    return;
+  }
+  box.innerHTML=evs.map(e=>`
+    <div class="cal-a-event-item" onclick="showDetail('${e.id}')">
+      <div class="ev-title">
+        ${escapeHtml(e.title)}
+        ${e.startTime?`<span class="time-tag">${e.startTime}${e.endTime?'-'+e.endTime:''}</span>`:'<span class="time-tag">全天</span>'}
+      </div>
+      <div class="ev-meta">
+        ${e.location?`<span>📍 ${escapeHtml(e.location)}</span>`:''}
+        ${e.repeat&&e.repeat!=='none'?`<span>🔁 ${repeatLabel(e.repeat)}</span>`:''}
+        ${e.remindBefore&&e.remindBefore!=='0'?`<span>🔔 ${remindLabel(e.remindBefore)}</span>`:''}
+      </div>
+      ${e.description?`<div style="font-size:12px;color:#94a3b8;margin-top:6px;line-height:1.5;">${escapeHtml(e.description)}</div>`:''}
+    </div>`).join('');
+}
+
+/* ============ 日历B 渲染 ============ */
+function renderCalB(){
+  const d=selectedDate;
+  const wd=d.getDay();
+  const theme=THEMES[wd];
+  const calB=document.getElementById('calB');
+  calB.style.setProperty('--theme-color',theme.color);
+  calB.style.setProperty('--theme-bg',theme.bg);
+  document.getElementById('calBPicWrap').style.background=theme.gradient;
+  document.getElementById('calBPicCol').style.background=shade(theme.color,-55);
+  const pic=document.getElementById('calBPic');
+  if(pic.getAttribute('data-src')!==theme.img){
+    pic.setAttribute('data-src',theme.img);
+    pic.classList.add('swap');
+    pic.setAttribute('src',theme.img);
+    setTimeout(()=>pic.classList.remove('swap'),60);
+  }
+  document.getElementById('calBWeekLabel').textContent=theme.name;
+  document.getElementById('calBDateLabel').textContent=String(d.getDate()).padStart(2,'0');
+  document.getElementById('calBMonthLabel').textContent=`${d.getFullYear()}年${d.getMonth()+1}月`;
+
+  // 星期日期切换按钮：显示选中日期所在周的7天（按钮同时显示星期与日期）
+  const wdBox=document.getElementById('calBWdstrip');
+  const sunDate=new Date(d);sunDate.setDate(d.getDate()-wd);
+  const todayStr=formatDate(new Date());
+  let wdHtml='';
+  for(let i=0;i<7;i++){
+    const cd=new Date(sunDate);cd.setDate(sunDate.getDate()+i);
+    const cds=formatDate(cd);
+    const isActive=cds===formatDate(d);
+    const isToday=cds===todayStr;
+    const t=THEMES[i];
+    wdHtml+=`<div class="wd-btn ${isActive?'active':''} ${isToday?'today':''}" style="--theme-color:${t.color};" onclick="switchBDate('${cds}')" title="${cds}">
+      <span class="wn">${t.name}</span>
+      <span class="dn">${cd.getDate()}</span>
+      <span class="dot"></span>
+    </div>`;
+  }
+  wdBox.innerHTML=wdHtml;
+
+  // 日程
+  const ds=formatDate(d);
+  const evs=getEventsOf(ds,'B').sort((a,b)=>(a.startTime||'').localeCompare(b.startTime||''));
+  document.getElementById('calBEventCount').textContent=evs.length?`${evs.length} 项`:'空';
+  const evBox=document.getElementById('calBEvents');
+  if(!evs.length){
+    evBox.innerHTML=`<div class="no-events"><div class="big">✨</div><div>${theme.name}暂无主题日程</div></div>`;
+    return;
+  }
+  evBox.innerHTML=evs.map((e,idx)=>`
+    <div class="cal-b-event-card" style="animation-delay:${idx*0.07}s;" onclick="showDetail('${e.id}')">
+      <div class="ev-time">${e.startTime||'全天'}</div>
+      <div class="ev-body">
+        <div class="ev-t">${escapeHtml(e.title)}</div>
+        <div class="ev-m">
+          ${e.location?`📍 ${escapeHtml(e.location)}　`:''}
+          ${e.endTime&&!e.allDay?`至 ${e.endTime}　`:''}
+          ${e.repeat&&e.repeat!=='none'?`🔁 ${repeatLabel(e.repeat)}`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function switchBDate(ds){
+  selectDate(ds);
+}
+
+/* ============ 插图容器精确锁定 9:16 ============ */
+function fitPosterBox(){
+  const wrap=document.getElementById('calBPicWrap');
+  const box=document.getElementById('calBPicBox');
+  if(!wrap||!box)return;
+  const cs=getComputedStyle(wrap);
+  const availW=wrap.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const availH=wrap.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  if(availW<=0||availH<=0)return;
+  let w=availW,h=w*16/9;
+  if(h>availH){h=availH;w=h*9/16;}
+  box.style.width=Math.floor(w)+'px';
+  box.style.height=Math.floor(h)+'px';
+}
+
+/* ============ 工具 ============ */
+function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function repeatLabel(r){
+  if(r&&r.startsWith('custom:')){
+    try{const obj=JSON.parse(r.slice(7));return `自定义·每${obj.interval}${obj.unit==='day'?'天':obj.unit==='week'?'周':obj.unit==='month'?'月':'年'}`;}catch(e){return'自定义';}
+  }
+  return {none:'不重复',daily:'每天',weekly:'每周',monthly:'每月',yearly:'每年',workday:'工作日'}[r]||r;
+}
+function remindLabel(m){const n=Number(m);if(n===0)return'不提醒';if(n<60)return n+'分钟前';if(n===60)return'1小时前';if(n===1440)return'1天前';return Math.round(n/60)+'小时前';}
+function shade(hex,pct){
+  const n=parseInt(hex.slice(1),16);let r=(n>>16)+pct;let g=((n>>8)&0xff)+pct;let b=(n&0xff)+pct;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+function getLunarTerm(){return'';}
+
+/* ============ 日程详情浮窗 ============ */
+function showDetail(id){
+  const ev=loadEvents().find(x=>x.id===id);if(!ev)return;
+  const isA=ev.calendarId==='A';
+  const color=ev.color||(isA?'#3b82f6':'#e11d48');
+  const head=document.getElementById('diHead');
+  head.style.background=`linear-gradient(135deg,${color},${shade(color,isA?-10:-20)})`;
+  document.getElementById('diCat').textContent=isA?'📅 日历A · 商务日程':'🎨 日历B · 主题日程';
+  document.getElementById('diTitle').textContent=ev.title||'(无标题)';
+  // 时间
+  let timeStr=ev.date;
+  if(ev.allDay){timeStr+=' · <span class="di-allday">全天</span>';}
+  else if(ev.startTime){timeStr+=` ${ev.startTime}${ev.endTime?' - '+ev.endTime:''}`;}
+  document.getElementById('diTime').innerHTML=timeStr;
+  // 地点
+  if(ev.location){document.getElementById('diLocRow').style.display='flex';document.getElementById('diLoc').textContent=ev.location;}
+  else{document.getElementById('diLocRow').style.display='none';}
+  // 重复
+  if(ev.repeat&&ev.repeat!=='none'){document.getElementById('diRepRow').style.display='flex';document.getElementById('diRep').textContent=repeatLabel(ev.repeat);}
+  else{document.getElementById('diRepRow').style.display='none';}
+  // 提醒
+  if(ev.remindBefore&&ev.remindBefore!=='0'&&ev.remindBefore!==0){document.getElementById('diRemRow').style.display='flex';document.getElementById('diRem').textContent=remindLabel(ev.remindBefore);}
+  else{document.getElementById('diRemRow').style.display='none';}
+  // 备注
+  if(ev.description){document.getElementById('diDescRow').style.display='flex';document.getElementById('diDesc').textContent=ev.description;}
+  else{document.getElementById('diDescRow').style.display='none';}
+  document.getElementById('detailMask').classList.add('show');
+}
+function closeDetail(){document.getElementById('detailMask').classList.remove('show');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+
+/* ============ 渲染入口 ============ */
+function renderAll(){renderBigCalendar();renderCalA();renderCalB();updateTermBadge();requestAnimationFrame(fitPosterBox);}
+function refreshAll(){renderAll();}
+
+/* ============ 同步 ============ */
+window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY||e.key===TERM_KEY||e.key===BEAUTY_KEY){applyBeauty();refreshAll();}});
+window.addEventListener('caldata:changed',refreshAll);
+
+/* ============ 初始化 ============ */
+function genId(){return'ev_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function seedDemoIfEmpty(){
+  const cur=loadEvents();if(cur.length)return;
+  const t=new Date();const today=formatDate(t);
+  const tomorrow=formatDate(new Date(t.getFullYear(),t.getMonth(),t.getDate()+1));
+  const demo=[
+    {id:genId(),calendarId:'A',title:'团队早会',date:today,startTime:'09:00',endTime:'09:30',location:'会议室A',description:'本周工作同步',remindBefore:'15',repeat:'workday',color:'#3b82f6',createdAt:Date.now()},
+    {id:genId(),calendarId:'A',title:'项目评审会议',date:today,startTime:'14:00',endTime:'16:00',location:'大会议室',description:'Q4需求评审',remindBefore:'30',repeat:'none',color:'#3b82f6',createdAt:Date.now()},
+    {id:genId(),calendarId:'B',title:'晨跑锻炼',date:today,startTime:'07:00',endTime:'07:45',location:'城市公园',description:'每周固定锻炼',remindBefore:'10',repeat:'weekly',color:THEMES[t.getDay()].color,createdAt:Date.now()},
+    {id:genId(),calendarId:'B',title:'下午茶时光',date:tomorrow,startTime:'15:30',endTime:'16:00',location:'咖啡厅',description:'放松一下',remindBefore:'0',repeat:'none',color:'#f59e0b',createdAt:Date.now()},
+  ];
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(demo));
+  window.dispatchEvent(new CustomEvent('caldata:changed',{detail:demo}));
+}
+function hideLoader(){
+  const el=document.getElementById('loader');
+  if(el&&!el.classList.contains('hidden'))el.classList.add('hidden');
+}
+window.addEventListener('load',()=>{
+  seedDemoIfEmpty();
+  applyBeauty();
+  refreshAll();
+  fitPosterBox();
+  setTimeout(()=>{hideLoader();fitPosterBox();},1400);
+});
+window.addEventListener('resize',()=>{fitPosterBox();});
+if(window.ResizeObserver){
+  const pw=document.getElementById('calBPicWrap');
+  if(pw)new ResizeObserver(()=>fitPosterBox()).observe(pw);
+}
+</script>
+<!-- 日程详情浮窗 -->
+<div class="detail-mask" id="detailMask" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-card" id="detailCard">
+    <div class="detail-head" id="diHead">
+      <button class="di-close" onclick="closeDetail()">×</button>
+      <div class="di-cat" id="diCat">商务日程</div>
+      <div class="di-title" id="diTitle"></div>
+    </div>
+    <div class="detail-body">
+      <div class="di-row"><div class="di-k">🕒 时间</div><div class="di-v" id="diTime"></div></div>
+      <div class="di-row" id="diLocRow" style="display:none;"><div class="di-k">📍 地点</div><div class="di-v" id="diLoc"></div></div>
+      <div class="di-row" id="diRepRow" style="display:none;"><div class="di-k">🔁 重复</div><div class="di-v" id="diRep"></div></div>
+      <div class="di-row" id="diRemRow" style="display:none;"><div class="di-k">🔔 提醒</div><div class="di-v" id="diRem"></div></div>
+      <div class="di-row" id="diDescRow" style="display:none;"><div class="di-k">📝 备注</div><div class="di-v"><div class="di-desc" id="diDesc"></div></div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
