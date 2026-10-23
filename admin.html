@@ -7,7 +7,10 @@
 <title>日历管理平台</title>
 <meta name="description" content="日历管理平台：创建、编辑、删除日程，支持日历A/日历B归属管理与表格批量导入">
 <meta name="theme-color" content="#0052d9">
+<!-- Excel 解析库（锁定版本） -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- CloudBase Web SDK v2（锁定版本） -->
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/2.27.3/cloudbase.full.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6fa;color:#1f2329;}
@@ -688,15 +691,285 @@ textarea.form-input{resize:vertical;min-height:70px;}
 </div>
 
 <div id="toastContainer"></div>
+<!-- 云开发环境配置弹窗 -->
+<div class="modal" id="modalCloudConfig">
+  <div class="modal-backdrop" onclick="closeModal('modalCloudConfig')"></div>
+  <div class="modal-content" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('modalCloudConfig')">×</button>
+    <div class="modal-title">☁ 腾讯云 CloudBase 配置</div>
+    <p style="color:#64748b;font-size:13px;line-height:1.7;margin-bottom:14px;">
+      本项目数据存储在腾讯云 CloudBase 云数据库中，部署时请在
+      <a href="https://console.cloud.tencent.com/tcb" target="_blank" style="color:#0052d9;">云开发控制台</a>
+      创建环境并获取环境 ID（形如 my-env-0gxxx），填入下方。<br>
+      <b style="color:#ef4444;">注意</b>：需在控制台「数据库」中新建 3 个集合 <code>cal_events</code> / <code>cal_beauty</code> / <code>cal_term</code>，
+      并把权限设置为「所有用户可读，仅创建者可写」或「所有用户可读写」。
+    </p>
+    <div class="form-group">
+      <label class="form-label">CloudBase 环境 ID<span class="req">*</span></label>
+      <input class="form-input" id="cloudEnvId" placeholder="例如 my-calendar-xxxxxx">
+    </div>
+    <div class="form-group">
+      <label class="form-label">地域（可选）</label>
+      <select class="form-select" id="cloudRegion">
+        <option value="ap-shanghai" selected>上海（ap-shanghai）</option>
+        <option value="ap-guangzhou">广州（ap-guangzhou）</option>
+        <option value="ap-beijing">北京（ap-beijing）</option>
+        <option value="ap-nanjing">南京（ap-nanjing）</option>
+        <option value="ap-singapore">新加坡（ap-singapore）</option>
+      </select>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+      <button class="btn-secondary" onclick="closeModal('modalCloudConfig')">取消</button>
+      <button class="btn-primary" onclick="applyCloudConfig()">保存并连接</button>
+    </div>
+  </div>
+</div>
+
+<!-- 顶部连接状态 -->
+<div id="cloudStatus" style="position:fixed;top:10px;right:14px;z-index:9999;font-size:12px;padding:5px 12px;border-radius:14px;background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(6px);cursor:pointer;" onclick="openCloudConfig()">
+  <span id="cloudStatusDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#fbbf24;margin-right:6px;vertical-align:middle;"></span><span id="cloudStatusText">连接中…</span>
+</div>
+
 
 <script>
-/* ============ 数据层 ============ */
-const STORAGE_KEY = 'calendar_events_v1';
-function loadEvents(){
-  try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){return [];}
+/* ============ 数据层（腾讯云 CloudBase） ============ */
+/* ===================================================================
+   云环境配置（部署到公网前只需在这里填一次）
+   填入后：所有访客打开本页都会连接同一个云环境，无需各自配置。
+   留空时：回退为读取浏览器本地保存的环境配置。
+   =================================================================== */
+/* ============ 数据层（腾讯云 CloudBase Web SDK v2 · 管理后台） ============ */
+/* ===================================================================
+   接入规范：
+   - SDK 版本固定为 @cloudbase/js-sdk@2.27.3（见 <head>）
+   - 匿名登录：使用 v2 新 API app.auth.signInAnonymously()
+   - 登录态：auth({persistence:'local'})；已登录判断用同步方法 hasLoginState()
+   - 数据库：必须在登录成功后才能调用，否则 401
+   - 单文档监听：doc(id).watch()（官方支持），用于实时推送美化/教学周变更
+   - 集合监听：collection.watch()，onChange 带 snapshot.docChanges 增量
+   - 句柄管理：_watchers 数组保留 watcher 引用，重连/卸载时 .close()
+   =================================================================== */
+const CB_ENV_ID_BUILTIN = '';              // ← 填入腾讯云 CloudBase 环境 ID，如 'my-calendar-0gxxxx'
+const CB_REGION_BUILTIN  = 'ap-shanghai';  // ← 地域：ap-shanghai / ap-guangzhou / ap-beijing / ap-hongkong / ap-singapore
+
+const CB_ENV_KEY = 'cloudbase_env_v2';
+const EVENTS_COL = 'cal_events';
+const BEAUTY_COL = 'cal_beauty';
+const TERM_COL   = 'cal_term';
+const CONFIG_DOC = 'config';
+
+let cbApp = null;
+let cbDb = null;
+let cbReady = false;
+let cbError = null;
+let _cachedEvents = [];
+let _cachedBeauty = null;
+let _cachedTerm = null;
+let _beautyDraft = null;
+let _pollingTimer = null;
+const _watchers = [];
+
+function cloudStatus(text, state){
+  const el = document.getElementById('cloudStatusText');
+  const dot = document.getElementById('cloudStatusDot');
+  if(el) el.textContent = text;
+  if(dot){
+    dot.style.background = state==='ok'?'#4ade80':state==='err'?'#f87171':'#fbbf24';
+  }
 }
-function saveEvents(evs){localStorage.setItem(STORAGE_KEY,JSON.stringify(evs));window.dispatchEvent(new CustomEvent('caldata:changed',{detail:evs}));render();}
+
+function _cleanupCloud(){
+  if(_watchers.length){_watchers.forEach(w=>{try{w.close&&w.close();}catch(e){}});_watchers.length=0;}
+  if(_pollingTimer){clearInterval(_pollingTimer);_pollingTimer=null;}
+}
+
+function openCloudConfig(){document.getElementById('modalCloudConfig').classList.add('show');}
+
+async function applyCloudConfig(){
+  const envId = document.getElementById('cloudEnvId').value.trim();
+  const region = document.getElementById('cloudRegion').value;
+  if(!envId){toast('请填写环境 ID','error');return;}
+  localStorage.setItem(CB_ENV_KEY, JSON.stringify({envId, region}));
+  closeModal('modalCloudConfig');
+  await initCloudBase();
+}
+
+async function initCloudBase(){
+  let cfg = null;
+  if(CB_ENV_ID_BUILTIN){
+    cfg = {envId: CB_ENV_ID_BUILTIN, region: CB_REGION_BUILTIN};
+    const ie = document.getElementById('cloudEnvId'); if(ie) ie.value = cfg.envId;
+    const re = document.getElementById('cloudRegion'); if(re) re.value = cfg.region;
+  }else{
+    const raw = localStorage.getItem(CB_ENV_KEY);
+    if(!raw){
+      cloudStatus('未配置云环境','err');
+      setTimeout(()=>openCloudConfig(), 300);
+      return;
+    }
+    try{cfg=JSON.parse(raw);}catch(e){openCloudConfig();return;}
+    if(!cfg.envId){openCloudConfig();return;}
+    const ie = document.getElementById('cloudEnvId'); if(ie) ie.value = cfg.envId||'';
+    if(cfg.region){
+      const re = document.getElementById('cloudRegion'); if(re) re.value = cfg.region;
+    }
+  }
+
+  _cleanupCloud();
+  cloudStatus('连接中…','loading');
+
+  try{
+    // 1) 初始化 SDK
+    cbApp = cloudbase.init({env: cfg.envId, region: cfg.region||'ap-shanghai', lang:'zh-CN'});
+    if(!cbApp){throw new Error('SDK 初始化失败');}
+
+    // 2) 匿名登录（v2 API）：已登录则跳过，避免重复请求
+    const auth = cbApp.auth({persistence:'local'});
+    if(!auth.hasLoginState()){
+      const signRes = await auth.signInAnonymously();
+      if(!signRes && !auth.hasLoginState()){
+        throw new Error('匿名登录失败，请在控制台开启"匿名登录"开关');
+      }
+    }
+
+    // 3) 获取数据库实例（登录后才可用）
+    cbDb = cbApp.database();
+    if(!cbDb){throw new Error('获取数据库实例失败');}
+
+    cbReady = true;
+    cbError = null;
+    cloudStatus('☁ 已连接','ok');
+
+    await reloadAllFromCloud();
+    startWatchers();
+    startPolling();
+    render();
+  }catch(err){
+    console.error('[CloudBase] 初始化失败：', err);
+    cbReady = false;
+    cbError = err;
+    cbDb = null;
+    const msg = (err && err.message) ? String(err.message) : String(err);
+    cloudStatus('连接失败','err');
+    toast('云数据库连接失败：'+msg,'error');
+  }
+}
+
+async function reloadAllFromCloud(){
+  if(!cbDb)return;
+  // 日程集合（按日期升序，最多 1000 条）
+  try{
+    const res = await cbDb.collection(EVENTS_COL).orderBy('date','asc').limit(1000).get();
+    _cachedEvents = (res.data||[]).map(d=>{
+      const o = Object.assign({}, d);
+      o._cloudId = d._id;
+      delete o._id;
+      delete o._openid;
+      return o;
+    });
+  }catch(e){console.error('[CloudBase] 加载日程失败',e);_cachedEvents=[];}
+
+  // 美化配置（单文档）
+  try{
+    const r = await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).get();
+    if(r && r.data && r.data.length){
+      const d = r.data[0];
+      delete d._id;delete d._openid;
+      _cachedBeauty = d;
+      _beautyDraft = JSON.parse(JSON.stringify(d));
+    }else{_cachedBeauty=null;_beautyDraft=defaultBeauty();}
+  }catch(e){_cachedBeauty=null;_beautyDraft=defaultBeauty();}
+
+  // 教学周设置（单文档）
+  try{
+    const r = await cbDb.collection(TERM_COL).doc(CONFIG_DOC).get();
+    if(r && r.data && r.data.length){
+      const d = r.data[0];
+      delete d._id;delete d._openid;
+      _cachedTerm = d;
+      const se = document.getElementById('termStart'); if(se&&!se.value)se.value=d.start||'';
+      const ee = document.getElementById('termEnd'); if(ee&&!ee.value)ee.value=d.end||'';
+    }else{_cachedTerm=null;}
+  }catch(e){_cachedTerm=null;}
+}
+
+function startWatchers(){
+  if(!cbDb)return;
+  // 日程集合监听：有增量变更时刷新
+  try{
+    const w1 = cbDb.collection(EVENTS_COL).watch({
+      onChange: async (snapshot)=>{
+        if(snapshot && snapshot.docChanges && snapshot.docChanges.length){
+          await reloadAllFromCloud();
+          window.dispatchEvent(new CustomEvent('caldata:changed',{detail:_cachedEvents}));
+          render();
+        }
+      },
+      onError: (err)=>console.warn('[watch] events 监听异常：',err)
+    });
+    if(w1)_watchers.push(w1);
+  }catch(e){console.warn('[CloudBase] events watch 启动失败：',e);}
+
+  // 美化配置（单文档监听）
+  try{
+    const w2 = cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).watch({
+      onChange: async (snapshot)=>{
+        if(snapshot && snapshot.docs && snapshot.docs.length){
+          const d = snapshot.docs[0];
+          delete d._id;delete d._openid;
+          _cachedBeauty = d;
+          _beautyDraft = JSON.parse(JSON.stringify(d));
+        }else{_cachedBeauty=null;_beautyDraft=defaultBeauty();}
+        render();
+      },
+      onError: (err)=>console.warn('[watch] beauty 监听异常：',err)
+    });
+    if(w2)_watchers.push(w2);
+  }catch(e){console.warn('[CloudBase] beauty watch 启动失败：',e);}
+
+  // 教学周设置（单文档监听）
+  try{
+    const w3 = cbDb.collection(TERM_COL).doc(CONFIG_DOC).watch({
+      onChange: async (snapshot)=>{
+        if(snapshot && snapshot.docs && snapshot.docs.length){
+          const d = snapshot.docs[0];
+          delete d._id;delete d._openid;
+          _cachedTerm = d;
+        }else{_cachedTerm=null;}
+        render();
+      },
+      onError: (err)=>console.warn('[watch] term 监听异常：',err)
+    });
+    if(w3)_watchers.push(w3);
+  }catch(e){console.warn('[CloudBase] term watch 启动失败：',e);}
+}
+
+function startPolling(){
+  if(_pollingTimer)return;
+  _pollingTimer = setInterval(async ()=>{
+    if(cbReady){
+      try{await reloadAllFromCloud();render();}
+      catch(e){console.warn('[polling] 异常：',e);}
+    }
+  }, 30000);
+}
+
+function loadEvents(){return _cachedEvents.slice();}
 function genId(){return 'ev_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+async function saveEventsCloud(evs){
+  // 写数据通过具体 CRUD（add / set / remove）在各操作里直接调云端；
+  // 本地缓存立即更新以便 UI 即时响应，watcher 收到推送后会再拉一次以确保一致。
+  _cachedEvents = (evs||[]).slice();
+  window.dispatchEvent(new CustomEvent('caldata:changed',{detail:_cachedEvents}));
+  render();
+}
+
+// 页面卸载或隐藏时清理长连接
+window.addEventListener('beforeunload', _cleanupCloud);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){_cleanupCloud();}
+  else if(document.visibilityState==='visible' && cbApp && !cbReady){initCloudBase();}
+});
 
 // 日历A 固定只有一种主题色；日历B 多色
 const COLORS_A = ['#3b82f6'];
@@ -1105,7 +1378,6 @@ function buildCustomRepeatValue(){
 }
 
 /* ============ 日历美化（日历A / 日历B 主题） ============ */
-const BEAUTY_KEY='calendar_beauty_v1';
 const WD_CN=['周日','周一','周二','周三','周四','周五','周六'];
 const SWATCH_A=['#3b82f6','#0ea5e9','#6366f1','#0d9488','#f97316','#e11d48'];
 const SWATCH_B=['#e11d48','#f59e0b','#16a34a','#7c3aed','#0284c7','#ec4899'];
@@ -1128,8 +1400,7 @@ function defaultBeauty(){
 }
 function loadBeauty(){
   const d=defaultBeauty();
-  let raw=null;
-  try{raw=JSON.parse(localStorage.getItem(BEAUTY_KEY))||null;}catch(e){raw=null;}
+  const raw=_cachedBeauty;
   if(!raw)return d;
   if(raw.calA)Object.assign(d.calA,raw.calA);
   if(raw.calB)Object.assign(d.calB,raw.calB);
@@ -1140,11 +1411,10 @@ function calAColor(){const c=loadBeauty().calA;return (c&&c.color)||'#3b82f6';}
 function calBAccent(){const c=loadBeauty().calB;return (c&&c.accent)||'#e11d48';}
 function escAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
-let beautyDraft=null;
 
 /* 视图切换：日程管理 <-> 日历美化 */
 function openBeauty(){
-  beautyDraft=loadBeauty();
+  _beautyDraft=loadBeauty();
   document.getElementById('calView').style.display='none';
   document.getElementById('beautyView').style.display='';
   const btn=document.getElementById('btnBeauty');
@@ -1161,8 +1431,8 @@ function backToCalView(){
 }
 
 function renderBeautyForm(){
-  if(!beautyDraft)beautyDraft=loadBeauty();
-  const cfg=beautyDraft;
+  if(!_beautyDraft)_beautyDraft=loadBeauty();
+  const cfg=_beautyDraft;
   document.getElementById('bCalAName').value=cfg.calA.name||'';
   document.getElementById('bCalAPicker').value=cfg.calA.color||'#3b82f6';
   document.getElementById('bCalAVal').textContent=cfg.calA.color||'#3b82f6';
@@ -1211,7 +1481,7 @@ function updateCalAPreview(color){
   if(bar)bar.style.background=color;
 }
 function pickCalAColor(c){
-  beautyDraft.calA.color=c;
+  _beautyDraft.calA.color=c;
   document.getElementById('bCalAPicker').value=c;
   document.getElementById('bCalAVal').textContent=c;
   document.querySelectorAll('#bCalASwatches .sw').forEach(el=>{
@@ -1221,24 +1491,24 @@ function pickCalAColor(c){
 }
 function onBeautyColorInput(which,val){
   if(which==='A'){
-    beautyDraft.calA.color=val;
+    _beautyDraft.calA.color=val;
     document.getElementById('bCalAVal').textContent=val;
     document.querySelectorAll('#bCalASwatches .sw').forEach(el=>{
       el.classList.toggle('sel',(el.getAttribute('title')||'')===val);
     });
     updateCalAPreview(val);
   }else{
-    beautyDraft.calB.accent=val;
+    _beautyDraft.calB.accent=val;
     document.getElementById('bCalBAccentVal').textContent=val;
   }
 }
 function onThemeInput(i,key,val){
-  if(!beautyDraft||!beautyDraft.themes[i])return;
-  beautyDraft.themes[i][key]=val;
+  if(!_beautyDraft||!_beautyDraft.themes[i])return;
+  _beautyDraft.themes[i][key]=val;
   const items=document.querySelectorAll('#bThemesBox .bt-item');
   const it=items[i];
   if(!it)return;
-  const t=beautyDraft.themes[i];
+  const t=_beautyDraft.themes[i];
   const dot=it.querySelector('.bt-head .bt-dot');
   if(dot)dot.style.background=t.color;
   const pv=it.querySelector('.bt-preview');
@@ -1250,24 +1520,31 @@ function onThemeInput(i,key,val){
   const bar=it.querySelector('.bt-bgbar');
   if(bar){bar.style.background=t.bg;bar.style.color=t.color;bar.textContent='浅底预览 · 卡片背景色 '+t.bg;}
 }
-function saveBeauty(){
-  if(!beautyDraft)beautyDraft=loadBeauty();
-  beautyDraft.calA.name=(document.getElementById('bCalAName').value||'').trim()||'日历A · 商务日程';
-  beautyDraft.calB.name=(document.getElementById('bCalBName').value||'').trim()||'日历B · 主题日历';
-  localStorage.setItem(BEAUTY_KEY,JSON.stringify(beautyDraft));
-  window.dispatchEvent(new CustomEvent('caldata:changed'));
-  toast('美化设置已保存，展示页将自动同步','success');
+async function saveBeauty(){
+  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
+  if(!_beautyDraft)_beautyDraft=loadBeauty();
+  _beautyDraft.calA.name=(document.getElementById('bCalAName').value||'').trim()||'日历A · 商务日程';
+  _beautyDraft.calB.name=(document.getElementById('bCalBName').value||'').trim()||'日历B · 主题日程';
+  try{
+    await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).set(_beautyDraft);
+    _cachedBeauty = JSON.parse(JSON.stringify(_beautyDraft));
+    toast('美化设置已保存，展示页将自动同步','success');
+  }catch(err){toast('保存失败：'+err.message,'error');}
 }
-function resetBeauty(){
+async function resetBeauty(){
+  if(!cbReady){toast('云数据库未连接','error');return;}
   if(!confirm('确定恢复默认美化设置？当前自定义的主题色与插图将被清除。'))return;
-  localStorage.removeItem(BEAUTY_KEY);
-  beautyDraft=defaultBeauty();
-  renderBeautyForm();
-  window.dispatchEvent(new CustomEvent('caldata:changed'));
-  toast('已恢复默认美化设置','info');
+  try{
+    await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).remove();
+    _cachedBeauty=null;
+    _beautyDraft=defaultBeauty();
+    renderBeautyForm();
+    toast('已恢复默认美化设置','info');
+  }catch(err){toast('重置失败：'+err.message,'error');}
 }
 
-function saveEvent(){
+async function saveEvent(){
+  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
   const title=document.getElementById('evTitle').value.trim();
   const date=document.getElementById('evDate').value;
   if(!title){toast('请输入日程标题','error');return;}
@@ -1289,16 +1566,42 @@ function saveEvent(){
     freeBusy:document.getElementById('evFreeBusy').value||'busy',
     description:document.getElementById('evDesc').value.trim(),
     color:selColor,
-    createdAt:editingId?(loadEvents().find(e=>e.id===editingId)?.createdAt||Date.now()):Date.now(),
+    createdAt:editingId?((_cachedEvents.find(e=>e.id===editingId)||{}).createdAt||Date.now()):Date.now(),
     updatedAt:Date.now(),
   };
-  let list=loadEvents();
-  if(editingId){list=list.map(e=>e.id===editingId?ev:e);}
-  else{list.push(ev);}
-  saveEvents(list);closeModal('modalEdit');
-  toast(editingId?'日程已更新':'日程创建成功','success');
+  try{
+    if(editingId){
+      const old = _cachedEvents.find(e=>e.id===editingId);
+      if(old && old._cloudId){
+        const toUpd = Object.assign({}, ev);
+        delete toUpd._cloudId;
+        await cbDb.collection(EVENTS_COL).doc(old._cloudId).set(toUpd);
+      }else{
+        await cbDb.collection(EVENTS_COL).add(ev);
+      }
+    }else{
+      await cbDb.collection(EVENTS_COL).add(ev);
+    }
+    closeModal('modalEdit');
+    toast(editingId?'日程已更新':'日程创建成功','success');
+    // 触发 reload（watcher 也会触发，但为了立即可见，主动拉一次）
+    await reloadAllFromCloud();
+    render();
+  }catch(err){
+    toast('保存失败：'+err.message,'error');
+    console.error(err);
+  }
 }
-function delEvent(id){if(!confirm('确定删除此日程？'))return;saveEvents(loadEvents().filter(e=>e.id!==id));toast('已删除','info');}
+async function delEvent(id){
+  if(!cbReady){toast('云数据库未连接','error');return;}
+  if(!confirm('确定删除此日程？'))return;
+  try{
+    const ev = _cachedEvents.find(e=>e.id===id);
+    if(ev && ev._cloudId){await cbDb.collection(EVENTS_COL).doc(ev._cloudId).remove();}
+    toast('已删除','info');
+    await reloadAllFromCloud();render();
+  }catch(err){toast('删除失败：'+err.message,'error');}
+}
 /* ============ 清空指定日历分类 ============ */
 let clearTarget='A';
 /* 读取日历自定义名称（与「日历美化」设置一致） */
@@ -1343,30 +1646,33 @@ function renderClearModal(){
   }
 }
 function setClearTarget(k){clearTarget=k;renderClearModal();}
-function doClear(){
+async function doClear(){
+  if(!cbReady){toast('云数据库未连接','error');return;}
   const all=loadEvents();
   const label=clearTarget==='all'?'全部日历':calDisplayName(clearTarget);
-  const n=clearTarget==='all'?all.length:all.filter(e=>e.calendarId===clearTarget).length;
-  if(!n){toast(`「${label}」中暂无日程`,'info');return;}
-  const remain=clearTarget==='all'?[]:all.filter(e=>e.calendarId!==clearTarget);
-  currentPage=1;
-  saveEvents(remain);
-  closeModal('modalClear');
-  toast(`已清空「${label}」共 ${n} 条日程`,'success');
+  const targets=clearTarget==='all'?all:all.filter(e=>e.calendarId===clearTarget);
+  if(!targets.length){toast(`「${label}」中暂无日程`,'info');return;}
+  try{
+    // 逐条删除（CloudBase 单次批量删除需权限；逐条在小数据量下足够）
+    for(const ev of targets){
+      if(ev._cloudId){await cbDb.collection(EVENTS_COL).doc(ev._cloudId).remove();}
+    }
+    currentPage=1;
+    closeModal('modalClear');
+    toast(`已清空「${label}」共 ${targets.length} 条日程`,'success');
+    await reloadAllFromCloud();render();
+  }catch(err){toast('清空失败：'+err.message,'error');}
 }
-function closeModal(id){document.getElementById(id).classList.remove('show');}
+function closeModal(id){if(document.getElementById(id))document.getElementById(id).classList.remove('show');}
 
 /* ============ 教学周设置 ============ */
-const TERM_KEY = 'calendar_term_v1';
 /* 默认作息（12 节），可在「教学周设置」中修改 */
 const DEFAULT_PERIODS = [
   {s:'08:00',e:'08:45'},{s:'08:50',e:'09:35'},{s:'09:50',e:'10:35'},{s:'10:40',e:'11:25'},
   {s:'13:30',e:'14:15'},{s:'14:20',e:'15:05'},{s:'15:20',e:'16:05'},{s:'16:10',e:'16:55'},
   {s:'18:30',e:'19:15'},{s:'19:20',e:'20:05'},{s:'20:10',e:'20:55'},{s:'21:00',e:'21:45'}
 ];
-function loadTerm(){
-  try{return JSON.parse(localStorage.getItem(TERM_KEY))||null;}catch(e){return null;}
-}
+function loadTerm(){return _cachedTerm?Object.assign({},_cachedTerm):null;}
 function ymdIndex(y,m,d){return Math.round(new Date(y,m-1,d).getTime()/86400000);}
 function parseYMDText(s){
   const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -1439,19 +1745,23 @@ function openTermSetting(){
   document.getElementById('modalTerm').classList.add('show');
 }
 function resetPeriods(){renderPeriodGrid(DEFAULT_PERIODS);toast('已恢复默认作息时间','info');}
-function saveTermSetting(){
+async function saveTermSetting(){
+  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
   const s=document.getElementById('termStart').value;
   const e=document.getElementById('termEnd').value;
   if(!s||!e){toast('请填写教学周的开始与结束日期','error');return;}
   const sd=parseYMDText(s),ed=parseYMDText(e);
   if(!sd||!ed||ymdIndex(ed.y,ed.m,ed.d)<ymdIndex(sd.y,sd.m,sd.d)){toast('日期填写有误，请检查','error');return;}
   const data={startDate:s,endDate:e,periods:collectPeriods(),updatedAt:Date.now()};
-  localStorage.setItem(TERM_KEY,JSON.stringify(data));
-  closeModal('modalTerm');
-  const total=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
-  toast(`教学周已保存：共 ${total} 周`,'success');
-  const wd=new Date(sd.y,sd.m-1,sd.d).getDay();
-  if(wd!==1)setTimeout(()=>toast('提醒：教学周开始日不是周一，课表日期可能整体错位','info'),2400);
+  try{
+    await cbDb.collection(TERM_COL).doc(CONFIG_DOC).set(data);
+    _cachedTerm = data;
+    closeModal('modalTerm');
+    const total=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
+    toast(`教学周已保存：共 ${total} 周`,'success');
+    const wd=new Date(sd.y,sd.m-1,sd.d).getDay();
+    if(wd!==1)setTimeout(()=>toast('提醒：教学周开始日不是周一，课表日期可能整体错位','info'),2400);
+  }catch(err){toast('保存失败：'+err.message,'error');}
 }
 
 /* ============ 模板下载 ============ */
@@ -1842,7 +2152,8 @@ function parseTimetable(rows){
 function showImportResult(msg,isErr){
   document.getElementById('importResult').innerHTML=`<div class="import-result ${isErr?'err':''}">${msg}</div>`;
 }
-function confirmImport(){
+async function confirmImport(){
+  if(!cbReady){toast('云数据库未连接，无法导入','error');return;}
   const valid=parsedImportRows.filter(p=>!p._err).map(p=>({
     id:genId(),calendarId:p.calendarId,title:p.title,date:p.date,
     startTime:p.startTime,endTime:p.endTime,allDay:p.allDay,location:p.location,
@@ -1850,9 +2161,13 @@ function confirmImport(){
     createdAt:Date.now(),
   }));
   if(!valid.length)return;
-  const list=loadEvents();list.push(...valid);
-  saveEvents(list);closeModal('modalImport');
-  toast(`成功导入 ${valid.length} 条日程`,'success');
+  try{
+    // 批量添加（逐条，数据量小时足够快）
+    for(const ev of valid){await cbDb.collection(EVENTS_COL).add(ev);}
+    closeModal('modalImport');
+    toast(`成功导入 ${valid.length} 条日程`,'success');
+    await reloadAllFromCloud();render();
+  }catch(err){toast('导入失败：'+err.message,'error');}
 }
 
 /* ============ Toast ============ */
@@ -1863,11 +2178,13 @@ function toast(msg,type='info'){
 }
 
 /* ============ 初始化 ============ */
-window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY)render();});
 setupDrop();
 renderColorPicker();
-render();
 document.getElementById('evDate').value=formatDate(new Date());
+// 云环境就绪前先显示一个"加载中"占位
+render();
+// 启动云数据库连接
+initCloudBase();
 </script>
 </body>
 </html>

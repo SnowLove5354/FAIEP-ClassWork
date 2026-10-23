@@ -6,7 +6,9 @@
 <meta name="description" content="日历展示平台：大日历视图、商务日程与主题日历同屏展示，实时时钟与星期主题切换">
 <meta name="theme-color" content="#0f2027">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%85%3C/text%3E%3C/svg%3E">
-<title>千鸟学院工作日历</title>
+<title>日历展示平台</title>
+<!-- CloudBase Web SDK v2（锁定版本，避免 latest 引入不兼容变更） -->
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/2.27.3/cloudbase.full.js"></script>
 <style>
 /* ============ 全局 ============ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -212,12 +214,12 @@ html,body{width:100%;min-height:100vh;font-family:-apple-system,BlinkMacSystemFo
 <div id="loader">
   <div class="loader-ring"></div>
   <div class="loader-text">CALENDAR</div>
-  <div class="loader-subtext">少女祈祷中…</div>
+  <div class="loader-subtext" id="loaderSubtext">正在加载日历数据…</div>
 </div>
 
 <!-- 顶栏 -->
 <div class="topbar">
-  <div class="brand"><span class="dot"></span>千鸟学院工作日历</div>
+  <div class="brand"><span class="dot"></span>日历展示中心</div>
   <div class="realtime">
     <div class="date-str" id="dateStr"></div>
     <div class="time-row">
@@ -289,11 +291,199 @@ html,body{width:100%;min-height:100vh;font-family:-apple-system,BlinkMacSystemFo
 </div>
 
 <script>
-/* ============ 数据 ============ */
-const STORAGE_KEY = 'calendar_events_v1';
-function loadEvents(){
-  try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){return [];}
+/* ============ 数据层（腾讯云 CloudBase Web SDK v2 · 静态托管 + 云数据库） ============ */
+/* ===================================================================
+   云环境配置（部署到公网前填写）
+   填入后：所有访客打开本页自动连接同一个云环境，真正实现"一处修改、全员可见"。
+   留空时：仅回退读取浏览器本地保存的环境配置（首次访问需在 admin 页配置一次）。
+
+   使用规范：
+   1. SDK 版本固定为 @cloudbase/js-sdk@2.27.3（见 <head>）
+   2. 匿名登录用 app.auth.signInAnonymously()（v2 新 API），
+      登录态持久化用 persistence:'local'，
+      判断已登录用同步方法 auth.hasLoginState()
+   3. 数据库操作必须在匿名登录完成后才能调用，否则 401
+   4. 实时监听 watch() 需注册 onError，失败时不阻塞页面，轮询兜底
+   5. doc(id).watch() 官方支持单文档监听，用于美化与教学周配置变更推送
+   =================================================================== */
+const CB_ENV_ID_BUILTIN = '';              // ← 填入腾讯云 CloudBase 环境 ID，如 'my-calendar-0gxxxx'
+const CB_REGION_BUILTIN  = 'ap-shanghai';  // ← 地域：ap-shanghai / ap-guangzhou / ap-beijing / ap-hongkong / ap-singapore
+
+const CB_ENV_KEY = 'cloudbase_env_v2';
+const EVENTS_COL = 'cal_events';
+const BEAUTY_COL = 'cal_beauty';
+const TERM_COL   = 'cal_term';
+const CONFIG_DOC = 'config';
+
+let cbApp = null, cbDb = null, cbReady = false;
+let _cachedEvents = [];
+let _cachedBeauty = null;
+let _cachedTerm   = null;
+let _loaderHidden = false;
+let _pollingTimer = null;
+const _watchers = []; // 保存 watcher 句柄，页面卸载或重连时 close
+
+function setLoaderText(txt){const el=document.getElementById('loaderSubtext');if(el)el.textContent=txt;}
+
+function _cleanupCloud(){
+  // 关闭之前的 watcher 与轮询，避免重复注册
+  if(_watchers.length){_watchers.forEach(w=>{try{w.close&&w.close();}catch(e){}});_watchers.length=0;}
+  if(_pollingTimer){clearInterval(_pollingTimer);_pollingTimer=null;}
 }
+
+async function initCloudBase(){
+  let cfg = null;
+  if(CB_ENV_ID_BUILTIN){
+    cfg = {envId: CB_ENV_ID_BUILTIN, region: CB_REGION_BUILTIN};
+  }else{
+    const raw = localStorage.getItem(CB_ENV_KEY);
+    if(!raw){
+      setLoaderText('未配置云环境，显示空日历');
+      setTimeout(hideLoader, 800);
+      return;
+    }
+    try{cfg=JSON.parse(raw);}catch(e){setLoaderText('配置异常，显示空日历');setTimeout(hideLoader,800);return;}
+  }
+  if(!cfg || !cfg.envId){setLoaderText('未配置云环境');setTimeout(hideLoader,800);return;}
+
+  _cleanupCloud();
+  setLoaderText('正在连接云服务…');
+
+  try{
+    // 1) 初始化 SDK（v2 推荐写法，region 缺省为 ap-shanghai）
+    cbApp = cloudbase.init({env: cfg.envId, region: cfg.region||'ap-shanghai', lang:'zh-CN'});
+    if(!cbApp){throw new Error('SDK 初始化失败，请检查脚本是否加载成功');}
+
+    // 2) 身份认证：开启持久化，已登录则跳过匿名登录，避免重复请求
+    const auth = cbApp.auth({persistence:'local'});
+    if(!auth.hasLoginState()){
+      // v2 匿名登录 API
+      const signRes = await auth.signInAnonymously();
+      if(!signRes && !auth.hasLoginState()){
+        throw new Error('匿名登录失败，请在控制台开启"匿名登录"开关');
+      }
+    }
+
+    // 3) 获取数据库实例（登录后才可用）
+    cbDb = cbApp.database();
+    if(!cbDb){throw new Error('获取数据库实例失败');}
+
+    cbReady = true;
+    setLoaderText('正在加载日程数据…');
+    await reloadAllFromCloud();
+    startWatchers();
+    startPolling();
+    applyBeauty();
+    refreshAll();
+    hideLoader();
+  }catch(err){
+    console.error('[CloudBase] 初始化失败：', err);
+    cbReady = false;
+    cbDb = null;
+    setLoaderText('云服务连接失败，显示本地缓存');
+    setTimeout(hideLoader, 800);
+  }
+}
+
+async function reloadAllFromCloud(){
+  if(!cbDb)return;
+  // 拉取全部日程（单次最多 1000 条；数据量超过需分页）
+  try{
+    const r1 = await cbDb.collection(EVENTS_COL).orderBy('date','asc').limit(1000).get();
+    _cachedEvents = (r1.data||[]).map(d=>{
+      const o = Object.assign({}, d);
+      o._cloudId = d._id;
+      delete o._id;
+      delete o._openid;
+      return o;
+    });
+  }catch(e){console.warn('[CloudBase] 加载日程失败', e);}
+
+  // 美化配置（单文档）：doc(id).get() 返回 {data:[{...}]}
+  try{
+    const r2 = await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).get();
+    if(r2 && r2.data && r2.data.length){
+      const d = r2.data[0];
+      delete d._id; delete d._openid;
+      _cachedBeauty = d;
+    }else{_cachedBeauty=null;}
+  }catch(e){_cachedBeauty=null;}
+
+  // 教学周设置（单文档）
+  try{
+    const r3 = await cbDb.collection(TERM_COL).doc(CONFIG_DOC).get();
+    if(r3 && r3.data && r3.data.length){
+      const d = r3.data[0];
+      delete d._id; delete d._openid;
+      _cachedTerm = d;
+    }else{_cachedTerm=null;}
+  }catch(e){_cachedTerm=null;}
+}
+
+function startWatchers(){
+  if(!cbDb)return;
+  // 事件集合监听
+  try{
+    const w1 = cbDb.collection(EVENTS_COL).watch({
+      onChange: async (snapshot)=>{
+        // 仅在有增量变化时刷新，避免初始化触发的 onChange 导致重复渲染
+        if(snapshot && snapshot.docChanges && snapshot.docChanges.length){
+          await reloadAllFromCloud();
+          refreshAll();
+        }
+      },
+      onError: (err)=>{console.warn('[watch] events 监听异常：', err);}
+    });
+    if(w1)_watchers.push(w1);
+  }catch(e){console.warn('[CloudBase] events watch 启动失败：', e);}
+
+  // 单文档监听：美化配置（doc(id).watch 官方支持）
+  try{
+    const w2 = cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).watch({
+      onChange: async (snapshot)=>{
+        // snapshot.docs[0] 即最新的配置文档
+        if(snapshot && snapshot.docs && snapshot.docs.length){
+          const d = snapshot.docs[0];
+          delete d._id; delete d._openid;
+          _cachedBeauty = d;
+        }else{_cachedBeauty=null;}
+        applyBeauty();
+        refreshAll();
+      },
+      onError: (err)=>{console.warn('[watch] beauty 监听异常：', err);}
+    });
+    if(w2)_watchers.push(w2);
+  }catch(e){console.warn('[CloudBase] beauty watch 启动失败：', e);}
+
+  // 单文档监听：教学周设置
+  try{
+    const w3 = cbDb.collection(TERM_COL).doc(CONFIG_DOC).watch({
+      onChange: async (snapshot)=>{
+        if(snapshot && snapshot.docs && snapshot.docs.length){
+          const d = snapshot.docs[0];
+          delete d._id; delete d._openid;
+          _cachedTerm = d;
+        }else{_cachedTerm=null;}
+        updateTermBadge();
+      },
+      onError: (err)=>{console.warn('[watch] term 监听异常：', err);}
+    });
+    if(w3)_watchers.push(w3);
+  }catch(e){console.warn('[CloudBase] term watch 启动失败：', e);}
+}
+
+function startPolling(){
+  if(_pollingTimer)return;
+  // 30 秒轮询兜底：watch 在极端情况（网络抖动/连接数限制）断开时仍能更新数据
+  _pollingTimer = setInterval(async ()=>{
+    if(cbReady){
+      try{await reloadAllFromCloud();refreshAll();}
+      catch(e){console.warn('[polling] 异常：', e);}
+    }
+  }, 30000);
+}
+
+function loadEvents(){return _cachedEvents.slice();}
 
 /* ============ 重复规则展开：判断某条日程是否在指定日期发生 ============ */
 function matchRepeat(ev,dateStr){
@@ -360,8 +550,7 @@ function tickClock(){
 setInterval(tickClock,1000);tickClock();
 
 /* ============ 教学周（读取管理页设定的教学周区间） ============ */
-const TERM_KEY='calendar_term_v1';
-function loadTerm(){try{return JSON.parse(localStorage.getItem(TERM_KEY))||null;}catch(e){return null;}}
+function loadTerm(){return _cachedTerm?Object.assign({},_cachedTerm):null;}
 function ymdIndex(y,m,d){return Math.round(new Date(y,m-1,d).getTime()/86400000);}
 function parseYMDText(s){
   const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -406,9 +595,8 @@ const THEMES=[
 ];
 
 /* ============ 日历美化同步（读取管理页「日历美化」设置） ============ */
-const BEAUTY_KEY='calendar_beauty_v1';
 const THEMES_DEFAULT=THEMES.map(t=>({...t}));
-function loadBeauty(){try{return JSON.parse(localStorage.getItem(BEAUTY_KEY))||null;}catch(e){return null;}}
+function loadBeauty(){return _cachedBeauty?JSON.parse(JSON.stringify(_cachedBeauty)):null;}
 function applyTitleName(elId,prefix,name,defTag){
   const el=document.getElementById(elId);if(!el)return;
   const nm=String(name||'').trim();
@@ -699,40 +887,33 @@ function renderAll(){renderBigCalendar();renderCalA();renderCalB();updateTermBad
 function refreshAll(){renderAll();}
 
 /* ============ 同步 ============ */
-window.addEventListener('storage',e=>{if(e.key===STORAGE_KEY||e.key===TERM_KEY||e.key===BEAUTY_KEY){applyBeauty();refreshAll();}});
 window.addEventListener('caldata:changed',refreshAll);
 
 /* ============ 初始化 ============ */
 function genId(){return'ev_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
-function seedDemoIfEmpty(){
-  const cur=loadEvents();if(cur.length)return;
-  const t=new Date();const today=formatDate(t);
-  const tomorrow=formatDate(new Date(t.getFullYear(),t.getMonth(),t.getDate()+1));
-  const demo=[
-    {id:genId(),calendarId:'A',title:'团队早会',date:today,startTime:'09:00',endTime:'09:30',location:'会议室A',description:'本周工作同步',remindBefore:'15',repeat:'workday',color:'#3b82f6',createdAt:Date.now()},
-    {id:genId(),calendarId:'A',title:'项目评审会议',date:today,startTime:'14:00',endTime:'16:00',location:'大会议室',description:'Q4需求评审',remindBefore:'30',repeat:'none',color:'#3b82f6',createdAt:Date.now()},
-    {id:genId(),calendarId:'B',title:'晨跑锻炼',date:today,startTime:'07:00',endTime:'07:45',location:'城市公园',description:'每周固定锻炼',remindBefore:'10',repeat:'weekly',color:THEMES[t.getDay()].color,createdAt:Date.now()},
-    {id:genId(),calendarId:'B',title:'下午茶时光',date:tomorrow,startTime:'15:30',endTime:'16:00',location:'咖啡厅',description:'放松一下',remindBefore:'0',repeat:'none',color:'#f59e0b',createdAt:Date.now()},
-  ];
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(demo));
-  window.dispatchEvent(new CustomEvent('caldata:changed',{detail:demo}));
-}
 function hideLoader(){
   const el=document.getElementById('loader');
-  if(el&&!el.classList.contains('hidden'))el.classList.add('hidden');
+  if(el&&!el.classList.contains('hidden')){el.classList.add('hidden');_loaderHidden=true;}
 }
 window.addEventListener('load',()=>{
-  seedDemoIfEmpty();
   applyBeauty();
   refreshAll();
   fitPosterBox();
-  setTimeout(()=>{hideLoader();fitPosterBox();},1400);
+  // 启动云连接；连接成功后会自动刷新并关闭 loader。若未配置，最多 1.6 秒兜底关闭
+  initCloudBase();
+  setTimeout(()=>{if(!_loaderHidden)hideLoader();},1600);
 });
 window.addEventListener('resize',()=>{fitPosterBox();});
 if(window.ResizeObserver){
   const pw=document.getElementById('calBPicWrap');
   if(pw)new ResizeObserver(()=>fitPosterBox()).observe(pw);
 }
+// 页面隐藏/卸载时关闭 watcher，释放长连接
+window.addEventListener('beforeunload', _cleanupCloud);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){_cleanupCloud();}
+  else if(document.visibilityState==='visible' && cbApp && !cbReady){initCloudBase();}
+});
 </script>
 <!-- 日程详情浮窗 -->
 <div class="detail-mask" id="detailMask" onclick="if(event.target===this)closeDetail()">
