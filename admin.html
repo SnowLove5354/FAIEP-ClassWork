@@ -7,23 +7,24 @@
 <title>日历管理平台</title>
 <meta name="description" content="日历管理平台：创建、编辑、删除日程，支持日历A/日历B归属管理与表格批量导入">
 <meta name="theme-color" content="#0052d9">
-<!-- Excel 解析库（锁定版本） -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<!-- CloudBase Web SDK v2（锁定版本） -->
-<script src="https://static.cloudbase.net/cloudbase-js-sdk/2.27.3/cloudbase.full.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6fa;color:#1f2329;}
 body{display:flex;flex-direction:column;min-height:100vh;}
 
-/* 顶部 */
 .admin-header{background:linear-gradient(90deg,#0052d9,#0069ff);color:#fff;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,82,217,.18);}
 .admin-header .logo{font-size:18px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:10px;}
 .admin-header .logo i{font-style:normal;background:rgba(255,255,255,.2);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;}
-.admin-header .links a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;margin-left:16px;padding:6px 14px;border:1px solid rgba(255,255,255,.3);border-radius:20px;transition:.2s;}
+.admin-header .header-right{display:flex;align-items:center;gap:12px;}
+.sync-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;white-space:nowrap;}
+.sync-badge .sd{width:7px;height:7px;border-radius:50%;background:#fbbf24;flex-shrink:0;}
+.sync-badge.cloud .sd{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+.sync-badge.offline .sd{background:#f87171;}
+.admin-header .links a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid rgba(255,255,255,.3);border-radius:20px;transition:.2s;}
 .admin-header .links a:hover{background:rgba(255,255,255,.15);color:#fff;}
 
-/* 主体 */
 .admin-body{flex:1;display:grid;grid-template-columns:280px 1fr;max-width:1600px;width:100%;margin:0 auto;}
 .sidebar{background:#fff;border-right:1px solid #e7e8eb;padding:20px 0;}
 .sidebar .cal-group{padding:0 18px;}
@@ -45,7 +46,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .btn-danger-outline{background:#fff;color:#e34d59;border:1px solid #fecdd0;}
 .btn-danger-outline:hover{background:#fff1f0;}
 
-/* 内容 */
 .content{padding:24px;overflow-y:auto;}
 .content-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
 .content-title{font-size:22px;font-weight:700;}
@@ -53,7 +53,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
 .toolbar button{padding:9px 18px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:.2s;display:flex;align-items:center;gap:6px;}
 
-/* 统计卡片 */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
 .stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .stat-card .label{font-size:12px;color:#8a9099;margin-bottom:8px;}
@@ -63,7 +62,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .stat-card.purple .value{color:#722ed1;}
 .stat-card.green .value{color:#13c2c2;}
 
-/* 高级筛选栏 */
 .filter-bar{background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .filter-row{display:grid;grid-template-columns:2fr 1.2fr 120px 120px auto;gap:12px;align-items:center;flex-wrap:wrap;}
 .filter-search{position:relative;}
@@ -92,7 +90,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
   .filter-summary{grid-column:1 / -1;justify-content:flex-end;}
 }
 
-/* 分页 */
 .pagination{background:#fff;border-radius:0 0 12px 12px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-top:-2px;border-top:1px solid #f7f8fa;flex-wrap:wrap;}
 .page-info{font-size:13px;color:#4e5969;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .page-info .page-total{color:#8a9099;font-size:12px;}
@@ -108,7 +105,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .page-jump input{width:46px;padding:5px 6px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;outline:none;text-align:center;background:#f9fafb;color:#1f2329;font-family:inherit;}
 .page-jump input:focus{border-color:#0052d9;background:#fff;}
 
-/* 日程列表 */
 .event-list{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .event-list-header{display:grid;grid-template-columns:100px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;background:#fafbfc;border-bottom:1px solid #f0f1f3;font-size:12px;color:#8a9099;font-weight:600;letter-spacing:.5px;}
 .event-row{display:grid;grid-template-columns:100px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;align-items:center;border-bottom:1px solid #f7f8fa;transition:.15s;font-size:14px;}
@@ -130,7 +126,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .empty-state{padding:60px 20px;text-align:center;color:#8a9099;}
 .empty-state .big{font-size:48px;margin-bottom:10px;}
 
-/* 弹窗 */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-mask.show{display:flex;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -152,7 +147,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
-/* 归属日历 */
 .calendar-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .cal-option{padding:12px;border:2px solid #e5e6eb;border-radius:10px;cursor:pointer;text-align:center;transition:.2s;}
 .cal-option:hover{border-color:#b9c9ff;}
@@ -163,14 +157,12 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .all-day-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#4e5969;cursor:pointer;}
 textarea.form-input{resize:vertical;min-height:70px;}
 
-/* 颜色选择 */
 .color-picker{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s;}
 .color-dot:hover{transform:scale(1.1);}
 .color-dot.sel{border-color:#1f2329;box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;}
 .color-tip{font-size:12px;color:#8a9099;margin-left:6px;}
 
-/* 自定义重复面板 */
 .custom-repeat-panel{margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;display:none;animation:slideDown .25s ease;}
 .custom-repeat-panel.show{display:block;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
@@ -183,7 +175,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .cr-end-opts{display:flex;gap:14px;font-size:13px;flex-wrap:wrap;}
 .cr-end-opts label{display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400;min-width:auto;}
 
-/* 导入弹窗 */
 .import-drop{border:2px dashed #d9d9d9;border-radius:12px;padding:32px 20px;text-align:center;transition:.2s;cursor:pointer;background:#fafbfc;}
 .import-drop.drag{border-color:#0052d9;background:#e8f0fe;}
 .import-drop .icon{font-size:42px;margin-bottom:8px;}
@@ -207,7 +198,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .template-info code{background:#fff;padding:1px 6px;border-radius:4px;font-family:monospace;}
 .template-info b{display:block;margin-bottom:4px;}
 
-/* 教学周设置 */
 .term-info{margin-top:10px;padding:12px 14px;background:#f0f7ff;border:1px solid #d6e8ff;border-radius:10px;font-size:13px;color:#0052d9;line-height:1.9;}
 .term-info b{font-weight:700;color:#003fab;}
 .term-info.warn{background:#fff7e6;border-color:#ffe0a3;color:#ad6800;}
@@ -224,92 +214,68 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .tt-badge{display:inline-block;background:#722ed1;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px;}
 .term-now{display:inline-block;background:#0052d9;color:#fff;font-size:12px;padding:3px 10px;border-radius:12px;font-weight:600;margin-top:6px;}
 
-/* toast */
+.tp-preview{border-radius:12px;overflow:hidden;border:1px solid #e5e6eb;margin-bottom:16px;background:#f0f2f5;}
+.tp-pv-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;font-size:12px;font-weight:600;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.35);}
+.tp-pv-topbar .tp-pv-clock{font-size:15px;font-variant-numeric:tabular-nums;}
+.tp-pv-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;flex-shrink:0;}
+.tp-pv-body{padding:10px;display:flex;gap:8px;align-items:center;background:#f0f2f5;transition:background .2s;}
+.tp-pv-cal{display:flex;gap:4px;}
+.tp-pv-day{width:24px;height:30px;border-radius:6px;background:#fff;font-size:11px;font-weight:700;color:#1f2329;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.tp-pv-card{flex:1;display:flex;align-items:center;gap:8px;background:#fff;padding:8px 10px;font-size:12px;font-weight:600;color:#1f2329;overflow:hidden;transition:border-radius .2s;}
+.tp-pv-card .bar{width:4px;height:20px;border-radius:2px;flex-shrink:0;background:#e11d48;transition:background .2s;}
+
+.tp-sec{background:#fafbfc;border:1px solid #f0f1f3;border-radius:12px;padding:16px;margin-bottom:14px;}
+.tp-sec-title{font-size:13px;font-weight:700;color:#1f2329;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.tp-sec-title::before{content:'';width:3px;height:13px;border-radius:2px;background:#0052d9;}
+.tp-swatches{display:flex;gap:8px;flex-wrap:wrap;}
+.tp-swatch{width:46px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:.2s;position:relative;}
+.tp-swatch:hover{transform:translateY(-2px);}
+.tp-swatch.sel{border-color:#1f2329;box-shadow:0 0 0 2px #fff,0 0 0 4px #0052d9;}
+.tp-swatch.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.55);}
+.tp-color{width:100%;height:38px;border:1px solid #e5e6eb;border-radius:8px;padding:3px;background:#fff;cursor:pointer;}
+.tp-checks{display:flex;flex-wrap:wrap;gap:10px 20px;}
+.tp-checks label{display:flex;align-items:center;gap:6px;font-size:13px;color:#4e5969;cursor:pointer;user-select:none;}
+.tp-day-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.tp-day-row .dn{font-size:12px;font-weight:600;color:#4e5969;width:36px;flex-shrink:0;}
+.tp-day-row .tp-color-sm{width:38px;height:32px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
+.tp-day-row .form-input{padding:6px 10px;font-size:12px;flex:1;min-width:0;}
+.tp-hint{font-size:12px;color:#8a9099;line-height:1.7;margin-top:6px;}
+
 .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,.2);animation:toastIn .3s;}
 .toast.success{background:#52c41a;}
 .toast.error{background:#e34d59;}
 .toast.info{background:#0052d9;}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-20px);}to{opacity:1;transform:translate(-50%,0);}}
 
-/* 响应式 */
 @media(max-width:860px){
   .admin-body{grid-template-columns:1fr;}
   .sidebar{border-right:none;border-bottom:1px solid #e7e8eb;padding:12px 0;}
   .sidebar .cal-group{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;}
-  .sidebar-actions{display:flex;gap:8px;padding:10px 14px;}
+  .sidebar-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;}
   .sidebar-actions button{margin-bottom:0;}
   .sidebar .group-title{display:none;}
   .content{padding:16px;}
   .event-list-header{display:none;}
   .event-row{grid-template-columns:1fr;gap:6px;padding:14px 16px;}
   .form-row,.form-row-3{grid-template-columns:1fr;}
+  .tp-day-row{flex-wrap:wrap;}
+  .sync-badge{display:none;}
 }
-
-/* ============ 日历美化 ============ */
-.beauty-card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:16px;}
-.beauty-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f1f3;}
-.beauty-card-head h3{font-size:16px;font-weight:700;color:#1f2329;}
-.beauty-card-head .bc-sub{font-size:12px;color:#8a9099;}
-.beauty-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
-.beauty-row>label{font-size:13px;color:#4e5969;font-weight:500;min-width:84px;}
-.beauty-row input[type=text]{flex:1;min-width:200px;padding:9px 12px;border:1px solid #e5e6eb;border-radius:8px;font-size:13px;font-family:inherit;color:#1f2329;transition:.2s;}
-.beauty-row input[type=text]:focus{outline:none;border-color:#0052d9;box-shadow:0 0 0 3px rgba(0,82,217,.12);}
-.beauty-row input[type=color]{width:46px;height:34px;border:1px solid #e5e6eb;border-radius:8px;cursor:pointer;background:#fff;padding:2px;flex-shrink:0;}
-.beauty-swatches{display:flex;gap:8px;flex-wrap:wrap;}
-.beauty-swatches .sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s;}
-.beauty-swatches .sw:hover{transform:scale(1.1);}
-.beauty-swatches .sw.sel{border-color:#1f2329;box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;}
-.beauty-val{font-size:12px;color:#8a9099;font-family:ui-monospace,Consolas,monospace;}
-.beauty-prev-box{flex:1;min-width:260px;border:1px solid #eef0f3;border-radius:10px;padding:14px;background:#fafbfc;}
-.beauty-prev-tag{display:inline-block;font-size:12px;color:#fff;padding:3px 10px;border-radius:12px;font-weight:500;transition:.3s;}
-.beauty-prev-num{font-size:28px;font-weight:800;line-height:1.35;transition:color .3s;}
-.beauty-prev-bar{height:3px;border-radius:2px;transition:background .3s;}
-.beauty-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
-.bt-item{border:1px solid #eef0f3;border-radius:10px;padding:14px;background:#fafbfc;}
-.bt-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#1f2329;margin-bottom:10px;}
-.bt-head .bt-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;transition:.3s;}
-.bt-field{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:#4e5969;}
-.bt-field>label{min-width:52px;flex-shrink:0;}
-.bt-field input[type=text]{flex:1;min-width:0;padding:6px 9px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;font-family:inherit;color:#1f2329;}
-.bt-field input[type=text]:focus{outline:none;border-color:#0052d9;}
-.bt-field input[type=color]{width:36px;height:28px;border:1px solid #e5e6eb;border-radius:6px;cursor:pointer;background:#fff;padding:1px;flex-shrink:0;}
-.bt-preview{margin-top:10px;border-radius:8px;overflow:hidden;height:150px;display:flex;align-items:center;justify-content:center;transition:background .3s;}
-.bt-preview img{height:100%;width:auto;max-width:100%;object-fit:cover;border-radius:6px;box-shadow:0 3px 10px rgba(0,0,0,.18);}
-.bt-bgbar{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:8px;font-size:12px;transition:.3s;}
-.sidebar-actions button.on{background:#e8f0fe;color:#0052d9;border:1px solid #b9c9ff;font-weight:600;}
-@media(max-width:860px){
-  .beauty-row>label{min-width:100%;}
-  .beauty-themes{grid-template-columns:1fr;}
-}
-
-/* ===== 清空指定日历 ===== */
-.clear-list{display:flex;flex-direction:column;gap:8px;}
-.clear-opt{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #e5e6eb;border-radius:10px;cursor:pointer;transition:.2s;background:#fff;}
-.clear-opt:hover{border-color:#b9d0f5;background:#f7faff;}
-.clear-opt.on{border-color:#0052d9;background:#eef5ff;box-shadow:0 0 0 2px rgba(0,82,217,.12);}
-.clear-opt .co-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0;}
-.clear-opt .co-name{flex:1;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.clear-opt .co-cnt{font-size:12px;color:#8a9099;background:#f0f1f3;padding:2px 8px;border-radius:10px;flex-shrink:0;}
-.clear-opt.on .co-cnt{background:#0052d9;color:#fff;}
-.clear-warn{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fff1f0;border:1px solid #fecdd0;color:#c0392b;font-size:13px;line-height:1.8;}
-.clear-warn b{font-weight:700;}
-.clear-warn.safe{background:#f6ffed;border-color:#c8e6a0;color:#4d7c0f;}
-.btn-danger{background:#e34d59;color:#fff;}
-.btn-danger:hover{background:#c93a47;}
-.btn-danger:disabled{background:#f2b8bd;cursor:not-allowed;}
 </style>
 </head>
 <body>
 
 <div class="admin-header">
   <div class="logo"><i>📆</i>日历管理平台</div>
-  <div class="links">
-    <a href="index.html" target="_blank">🔍 查看展示页</a>
+  <div class="header-right">
+    <span class="sync-badge" id="syncBadge"><span class="sd"></span><span id="syncText">初始化…</span></span>
+    <div class="links">
+      <a href="index.html" target="_blank">🔍 查看展示页</a>
+    </div>
   </div>
 </div>
 
 <div class="admin-body">
-  <!-- 侧栏 -->
   <aside class="sidebar">
     <div class="cal-group">
       <div class="group-title">我的日历</div>
@@ -333,13 +299,12 @@ textarea.form-input{resize:vertical;min-height:70px;}
       <button class="btn-primary" onclick="openCreate()">＋ 创建日程</button>
       <button class="btn-secondary" onclick="openImport()">📥 导入表格</button>
       <button class="btn-secondary" onclick="openTermSetting()">🎓 教学周设置</button>
-      <button class="btn-secondary" id="btnBeauty" onclick="openBeauty()">🎨 日历美化</button>
-      <button class="btn-danger-outline" onclick="openClear()">🧹 清空日程</button>
+      <button class="btn-secondary" onclick="openTheme()">🎨 展示页美化</button>
+      <button class="btn-danger-outline" onclick="clearAll()">🗑 清空全部</button>
     </div>
   </aside>
 
-  <!-- 内容 -->
-  <main class="content" id="calView">
+  <main class="content">
     <div class="content-header">
       <div class="content-title">日程管理<span class="sub" id="subInfo">管理所有日历的日程安排</span></div>
       <div class="toolbar">
@@ -347,7 +312,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
       </div>
     </div>
 
-    <!-- 高级筛选栏 -->
     <div class="filter-bar">
       <div class="filter-row">
         <div class="filter-search">
@@ -396,62 +360,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
     </div>
     <div class="pagination" id="pagination"></div>
   </main>
-
-  <!-- 日历美化视图 -->
-  <main class="content" id="beautyView" style="display:none;">
-    <div class="content-header">
-      <div class="content-title">日历美化<span class="sub">自定义日历A与日历B的主题色、渐变与星期插图，保存后自动同步到展示页</span></div>
-      <div class="toolbar">
-        <button class="btn-secondary" onclick="backToCalView()">← 返回日程</button>
-        <button class="btn-secondary" onclick="resetBeauty()">恢复默认</button>
-        <button class="btn-primary" onclick="saveBeauty()">💾 保存美化设置</button>
-      </div>
-    </div>
-
-    <div class="beauty-card">
-      <div class="beauty-card-head">
-        <h3>📅 日历A · 商务日程</h3>
-        <span class="bc-sub">单色主题：影响大日历标记、日历A 列表与标题</span>
-      </div>
-      <div class="beauty-row">
-        <label>显示名称</label>
-        <input type="text" id="bCalAName" maxlength="30" placeholder="日历A · 商务日程">
-      </div>
-      <div class="beauty-row">
-        <label>主题色</label>
-        <div class="beauty-swatches" id="bCalASwatches"></div>
-        <input type="color" id="bCalAPicker" oninput="onBeautyColorInput('A',this.value)">
-        <span class="beauty-val" id="bCalAVal"></span>
-      </div>
-      <div class="beauty-row">
-        <label>效果预览</label>
-        <div class="beauty-prev-box">
-          <span class="beauty-prev-tag" id="bCalATag">日历A · 商务日程</span>
-          <div class="beauty-prev-num" id="bCalAPrevNum">22</div>
-          <div class="beauty-prev-bar" id="bCalAPrevBar"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="beauty-card">
-      <div class="beauty-card-head">
-        <h3>🎨 日历B · 主题日历</h3>
-        <span class="bc-sub">7 天主题：主色 / 浅底 / 渐变 / 9:16 竖版插图</span>
-      </div>
-      <div class="beauty-row">
-        <label>显示名称</label>
-        <input type="text" id="bCalBName" maxlength="30" placeholder="日历B · 主题日历">
-        <label style="min-width:auto;">大日历标记色</label>
-        <input type="color" id="bCalBAccent" oninput="onBeautyColorInput('accent',this.value)">
-        <span class="beauty-val" id="bCalBAccentVal"></span>
-      </div>
-      <div class="beauty-themes" id="bThemesBox"></div>
-    </div>
-  </main>
 </div>
 
-
-<!-- 创建/编辑弹窗（简洁单栏表单 · 上一版） -->
 <div class="modal-mask" id="modalEdit">
   <div class="modal">
     <div class="modal-header">
@@ -488,26 +398,19 @@ textarea.form-input{resize:vertical;min-height:70px;}
           <input class="form-input" type="date" id="evDate">
         </div>
         <div class="form-group">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>开始 / 结束时间</span>
-            <span class="all-day-check"><input type="checkbox" id="evAllDay" onchange="toggleAllDay()"> 全天</span>
+          <label class="form-label">
+            <label class="all-day-check"><input type="checkbox" id="evAllDay" onchange="toggleAllDay()"> 全天</label>
           </label>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div class="form-row" style="gap:8px;">
             <input class="form-input" type="time" id="evStart" value="09:00">
             <input class="form-input" type="time" id="evEnd" value="10:00">
           </div>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">地点</label>
-          <input class="form-input" id="evLocation" placeholder="例如：会议室A、XX咖啡厅">
-        </div>
-        <div class="form-group">
-          <label class="form-label">参与人</label>
-          <input class="form-input" id="evAttendees" placeholder="例如：张三、李四">
-        </div>
+      <div class="form-group">
+        <label class="form-label">地点</label>
+        <input class="form-input" id="evLocation" placeholder="例如：会议室A、XX咖啡厅">
       </div>
 
       <div class="form-row">
@@ -557,18 +460,9 @@ textarea.form-input{resize:vertical;min-height:70px;}
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">忙闲状态</label>
-          <select class="form-select" id="evFreeBusy">
-            <option value="busy">忙碌</option>
-            <option value="free">空闲</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">日程颜色</label>
-          <div class="color-picker" id="colorPicker"></div>
-        </div>
+      <div class="form-group">
+        <label class="form-label">日程颜色</label>
+        <div class="color-picker" id="colorPicker"></div>
       </div>
 
       <div class="form-group">
@@ -577,13 +471,12 @@ textarea.form-input{resize:vertical;min-height:70px;}
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modalEdit')" type="button">取消</button>
-      <button class="btn-primary" onclick="saveEvent()" type="button">保存</button>
+      <button class="btn-secondary" onclick="closeModal('modalEdit')">取消</button>
+      <button class="btn-primary" onclick="saveEvent()">保存</button>
     </div>
   </div>
 </div>
 
-<!-- 导入弹窗 -->
 <div class="modal-mask" id="modalImport">
   <div class="modal" style="max-width:680px;">
     <div class="modal-header">
@@ -630,7 +523,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
   </div>
 </div>
 
-<!-- 教学周设置弹窗 -->
 <div class="modal-mask" id="modalTerm">
   <div class="modal" style="max-width:620px;">
     <div class="modal-header">
@@ -671,307 +563,123 @@ textarea.form-input{resize:vertical;min-height:70px;}
   </div>
 </div>
 
-<!-- 清空指定日历弹窗 -->
-<div class="modal-mask" id="modalClear">
-  <div class="modal" style="max-width:480px;">
+<div class="modal-mask" id="modalTheme">
+  <div class="modal" style="max-width:720px;">
     <div class="modal-header">
-      <h3>清空指定日历日程</h3>
-      <button class="modal-close" onclick="closeModal('modalClear')">×</button>
+      <h3>访问端页面美化</h3>
+      <button class="modal-close" onclick="closeModal('modalTheme')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-label" style="margin-bottom:8px;">选择要清空的日历分类</div>
-      <div class="clear-list" id="clearList"></div>
-      <div class="clear-warn" id="clearWarn"></div>
+
+      <div class="tp-preview">
+        <div class="tp-pv-topbar" id="pvTopbar">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span class="tp-pv-dot" id="pvDot"></span><span id="pvTitle">日历展示中心</span>
+          </span>
+          <span class="tp-pv-clock">20:26:31</span>
+        </div>
+        <div class="tp-pv-body" id="pvBody">
+          <div class="tp-pv-cal">
+            <div class="tp-pv-day">14</div>
+            <div class="tp-pv-day" id="pvToday">15</div>
+            <div class="tp-pv-day">16</div>
+          </div>
+          <div class="tp-pv-card" id="pvCard">
+            <span class="bar" id="pvBar"></span>
+            <span>团队早会 · 09:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">基础信息</div>
+        <div class="form-group">
+          <label class="form-label">展示页标题</label>
+          <input class="form-input" id="tpTitle" maxlength="20" placeholder="日历展示中心" oninput="updateThemePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">顶栏配色</label>
+          <div class="tp-swatches" id="tpTopbarSwatches"></div>
+          <input class="form-input" id="tpTopbarCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景，如 linear-gradient(90deg,#111,#333)" oninput="onTopbarCustom()">
+        </div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">配色与形状</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">日历A 主色</label>
+            <input type="color" class="tp-color" id="tpAccentA" value="#3b82f6" oninput="updateThemePreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">日历B 强调色</label>
+            <input type="color" class="tp-color" id="tpAccentB" value="#e11d48" oninput="updateThemePreview()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">页面背景</label>
+          <div class="tp-swatches" id="tpBgSwatches"></div>
+          <input class="form-input" id="tpBgCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景" oninput="onBgCustom()">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">卡片圆角 <b id="tpRadiusVal" style="color:#0052d9;">16px</b></label>
+            <input type="range" id="tpRadius" min="0" max="28" value="16" style="width:100%;" oninput="onRadiusInput()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">入场动画</label>
+            <select class="form-select" id="tpLoader" onchange="updateThemePreview()">
+              <option value="0">关闭（立即进入）</option>
+              <option value="800">较快 0.8 秒</option>
+              <option value="1400">标准 1.4 秒</option>
+              <option value="2200">较慢 2.2 秒</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">模块显示</div>
+        <div class="tp-checks">
+          <label><input type="checkbox" id="tpShowBig" checked onchange="updateThemePreview()"> 大日历视图</label>
+          <label><input type="checkbox" id="tpShowA" checked onchange="updateThemePreview()"> 日历A 商务日程</label>
+          <label><input type="checkbox" id="tpShowB" checked onchange="updateThemePreview()"> 日历B 主题日历</label>
+          <label><input type="checkbox" id="tpShowTerm" checked onchange="updateThemePreview()"> 教学周徽章</label>
+          <label><input type="checkbox" id="tpShowBrandDot" checked onchange="updateThemePreview()"> 顶栏呼吸灯</label>
+        </div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">日历B · 七天主题</div>
+        <div id="tpThemeList"></div>
+        <div class="tp-hint">插图 URL 留空表示使用内置插图；建议填写 9:16 竖版图片地址。</div>
+      </div>
+
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modalClear')">取消</button>
-      <button class="btn-danger" id="clearConfirmBtn" onclick="doClear()">确认清空</button>
+      <button class="btn-secondary" onclick="resetThemeForm()">恢复默认</button>
+      <button class="btn-secondary" onclick="closeModal('modalTheme')">取消</button>
+      <button class="btn-primary" onclick="saveTheme()">保存并应用</button>
     </div>
   </div>
 </div>
 
 <div id="toastContainer"></div>
-<!-- 云开发环境配置弹窗 -->
-<div class="modal" id="modalCloudConfig">
-  <div class="modal-backdrop" onclick="closeModal('modalCloudConfig')"></div>
-  <div class="modal-content" style="max-width:520px;">
-    <button class="modal-close" onclick="closeModal('modalCloudConfig')">×</button>
-    <div class="modal-title">☁ 腾讯云 CloudBase 配置</div>
-    <p style="color:#64748b;font-size:13px;line-height:1.7;margin-bottom:14px;">
-      本项目数据存储在腾讯云 CloudBase 云数据库中，部署时请在
-      <a href="https://console.cloud.tencent.com/tcb" target="_blank" style="color:#0052d9;">云开发控制台</a>
-      创建环境并获取环境 ID（形如 my-env-0gxxx），填入下方。<br>
-      <b style="color:#ef4444;">注意</b>：需在控制台「数据库」中新建 3 个集合 <code>cal_events</code> / <code>cal_beauty</code> / <code>cal_term</code>，
-      并把权限设置为「所有用户可读，仅创建者可写」或「所有用户可读写」。
-    </p>
-    <div class="form-group">
-      <label class="form-label">CloudBase 环境 ID<span class="req">*</span></label>
-      <input class="form-input" id="cloudEnvId" placeholder="例如 my-calendar-xxxxxx">
-    </div>
-    <div class="form-group">
-      <label class="form-label">地域（可选）</label>
-      <select class="form-select" id="cloudRegion">
-        <option value="ap-shanghai" selected>上海（ap-shanghai）</option>
-        <option value="ap-guangzhou">广州（ap-guangzhou）</option>
-        <option value="ap-beijing">北京（ap-beijing）</option>
-        <option value="ap-nanjing">南京（ap-nanjing）</option>
-        <option value="ap-singapore">新加坡（ap-singapore）</option>
-      </select>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
-      <button class="btn-secondary" onclick="closeModal('modalCloudConfig')">取消</button>
-      <button class="btn-primary" onclick="applyCloudConfig()">保存并连接</button>
-    </div>
-  </div>
-</div>
-
-<!-- 顶部连接状态 -->
-<div id="cloudStatus" style="position:fixed;top:10px;right:14px;z-index:9999;font-size:12px;padding:5px 12px;border-radius:14px;background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(6px);cursor:pointer;" onclick="openCloudConfig()">
-  <span id="cloudStatusDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#fbbf24;margin-right:6px;vertical-align:middle;"></span><span id="cloudStatusText">连接中…</span>
-</div>
-
 
 <script>
-/* ============ 数据层（腾讯云 CloudBase） ============ */
-/* ===================================================================
-   云环境配置（部署到公网前只需在这里填一次）
-   填入后：所有访客打开本页都会连接同一个云环境，无需各自配置。
-   留空时：回退为读取浏览器本地保存的环境配置。
-   =================================================================== */
-/* ============ 数据层（腾讯云 CloudBase Web SDK v2 · 管理后台） ============ */
-/* ===================================================================
-   接入规范：
-   - SDK 版本固定为 @cloudbase/js-sdk@2.27.3（见 <head>）
-   - 匿名登录：使用 v2 新 API app.auth.signInAnonymously()
-   - 登录态：auth({persistence:'local'})；已登录判断用同步方法 hasLoginState()
-   - 数据库：必须在登录成功后才能调用，否则 401
-   - 单文档监听：doc(id).watch()（官方支持），用于实时推送美化/教学周变更
-   - 集合监听：collection.watch()，onChange 带 snapshot.docChanges 增量
-   - 句柄管理：_watchers 数组保留 watcher 引用，重连/卸载时 .close()
-   =================================================================== */
-const CB_ENV_ID_BUILTIN = '';              // ← 填入腾讯云 CloudBase 环境 ID，如 'my-calendar-0gxxxx'
-const CB_REGION_BUILTIN  = 'ap-shanghai';  // ← 地域：ap-shanghai / ap-guangzhou / ap-beijing / ap-hongkong / ap-singapore
+/* ==================================================================
+   ★ 云同步配置区（已填入）
+   ================================================================== */
+const SUPABASE_URL = 'https://fyqfghqpolnmlgalfacu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Yy82euInOqqXRkqXbxg-eg_iMha8LKs';
 
-const CB_ENV_KEY = 'cloudbase_env_v2';
-const EVENTS_COL = 'cal_events';
-const BEAUTY_COL = 'cal_beauty';
-const TERM_COL   = 'cal_term';
-const CONFIG_DOC = 'config';
+/* ============ 基础常量 ============ */
+const STORAGE_KEY = 'calendar_events_v1';
+const TERM_KEY = 'calendar_term_v1';
+const DISPLAY_THEME_KEY = 'calendar_display_theme_v1';
+const CLOUD_EVENTS_TABLE = 'calendar_events';
+const CLOUD_SETTINGS_TABLE = 'app_settings';
 
-let cbApp = null;
-let cbDb = null;
-let cbReady = false;
-let cbError = null;
-let _cachedEvents = [];
-let _cachedBeauty = null;
-let _cachedTerm = null;
-let _beautyDraft = null;
-let _pollingTimer = null;
-const _watchers = [];
-
-function cloudStatus(text, state){
-  const el = document.getElementById('cloudStatusText');
-  const dot = document.getElementById('cloudStatusDot');
-  if(el) el.textContent = text;
-  if(dot){
-    dot.style.background = state==='ok'?'#4ade80':state==='err'?'#f87171':'#fbbf24';
-  }
-}
-
-function _cleanupCloud(){
-  if(_watchers.length){_watchers.forEach(w=>{try{w.close&&w.close();}catch(e){}});_watchers.length=0;}
-  if(_pollingTimer){clearInterval(_pollingTimer);_pollingTimer=null;}
-}
-
-function openCloudConfig(){document.getElementById('modalCloudConfig').classList.add('show');}
-
-async function applyCloudConfig(){
-  const envId = document.getElementById('cloudEnvId').value.trim();
-  const region = document.getElementById('cloudRegion').value;
-  if(!envId){toast('请填写环境 ID','error');return;}
-  localStorage.setItem(CB_ENV_KEY, JSON.stringify({envId, region}));
-  closeModal('modalCloudConfig');
-  await initCloudBase();
-}
-
-async function initCloudBase(){
-  let cfg = null;
-  if(CB_ENV_ID_BUILTIN){
-    cfg = {envId: CB_ENV_ID_BUILTIN, region: CB_REGION_BUILTIN};
-    const ie = document.getElementById('cloudEnvId'); if(ie) ie.value = cfg.envId;
-    const re = document.getElementById('cloudRegion'); if(re) re.value = cfg.region;
-  }else{
-    const raw = localStorage.getItem(CB_ENV_KEY);
-    if(!raw){
-      cloudStatus('未配置云环境','err');
-      setTimeout(()=>openCloudConfig(), 300);
-      return;
-    }
-    try{cfg=JSON.parse(raw);}catch(e){openCloudConfig();return;}
-    if(!cfg.envId){openCloudConfig();return;}
-    const ie = document.getElementById('cloudEnvId'); if(ie) ie.value = cfg.envId||'';
-    if(cfg.region){
-      const re = document.getElementById('cloudRegion'); if(re) re.value = cfg.region;
-    }
-  }
-
-  _cleanupCloud();
-  cloudStatus('连接中…','loading');
-
-  try{
-    // 1) 初始化 SDK
-    cbApp = cloudbase.init({env: cfg.envId, region: cfg.region||'ap-shanghai', lang:'zh-CN'});
-    if(!cbApp){throw new Error('SDK 初始化失败');}
-
-    // 2) 匿名登录（v2 API）：已登录则跳过，避免重复请求
-    const auth = cbApp.auth({persistence:'local'});
-    if(!auth.hasLoginState()){
-      const signRes = await auth.signInAnonymously();
-      if(!signRes && !auth.hasLoginState()){
-        throw new Error('匿名登录失败，请在控制台开启"匿名登录"开关');
-      }
-    }
-
-    // 3) 获取数据库实例（登录后才可用）
-    cbDb = cbApp.database();
-    if(!cbDb){throw new Error('获取数据库实例失败');}
-
-    cbReady = true;
-    cbError = null;
-    cloudStatus('☁ 已连接','ok');
-
-    await reloadAllFromCloud();
-    startWatchers();
-    startPolling();
-    render();
-  }catch(err){
-    console.error('[CloudBase] 初始化失败：', err);
-    cbReady = false;
-    cbError = err;
-    cbDb = null;
-    const msg = (err && err.message) ? String(err.message) : String(err);
-    cloudStatus('连接失败','err');
-    toast('云数据库连接失败：'+msg,'error');
-  }
-}
-
-async function reloadAllFromCloud(){
-  if(!cbDb)return;
-  // 日程集合（按日期升序，最多 1000 条）
-  try{
-    const res = await cbDb.collection(EVENTS_COL).orderBy('date','asc').limit(1000).get();
-    _cachedEvents = (res.data||[]).map(d=>{
-      const o = Object.assign({}, d);
-      o._cloudId = d._id;
-      delete o._id;
-      delete o._openid;
-      return o;
-    });
-  }catch(e){console.error('[CloudBase] 加载日程失败',e);_cachedEvents=[];}
-
-  // 美化配置（单文档）
-  try{
-    const r = await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).get();
-    if(r && r.data && r.data.length){
-      const d = r.data[0];
-      delete d._id;delete d._openid;
-      _cachedBeauty = d;
-      _beautyDraft = JSON.parse(JSON.stringify(d));
-    }else{_cachedBeauty=null;_beautyDraft=defaultBeauty();}
-  }catch(e){_cachedBeauty=null;_beautyDraft=defaultBeauty();}
-
-  // 教学周设置（单文档）
-  try{
-    const r = await cbDb.collection(TERM_COL).doc(CONFIG_DOC).get();
-    if(r && r.data && r.data.length){
-      const d = r.data[0];
-      delete d._id;delete d._openid;
-      _cachedTerm = d;
-      const se = document.getElementById('termStart'); if(se&&!se.value)se.value=d.start||'';
-      const ee = document.getElementById('termEnd'); if(ee&&!ee.value)ee.value=d.end||'';
-    }else{_cachedTerm=null;}
-  }catch(e){_cachedTerm=null;}
-}
-
-function startWatchers(){
-  if(!cbDb)return;
-  // 日程集合监听：有增量变更时刷新
-  try{
-    const w1 = cbDb.collection(EVENTS_COL).watch({
-      onChange: async (snapshot)=>{
-        if(snapshot && snapshot.docChanges && snapshot.docChanges.length){
-          await reloadAllFromCloud();
-          window.dispatchEvent(new CustomEvent('caldata:changed',{detail:_cachedEvents}));
-          render();
-        }
-      },
-      onError: (err)=>console.warn('[watch] events 监听异常：',err)
-    });
-    if(w1)_watchers.push(w1);
-  }catch(e){console.warn('[CloudBase] events watch 启动失败：',e);}
-
-  // 美化配置（单文档监听）
-  try{
-    const w2 = cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).watch({
-      onChange: async (snapshot)=>{
-        if(snapshot && snapshot.docs && snapshot.docs.length){
-          const d = snapshot.docs[0];
-          delete d._id;delete d._openid;
-          _cachedBeauty = d;
-          _beautyDraft = JSON.parse(JSON.stringify(d));
-        }else{_cachedBeauty=null;_beautyDraft=defaultBeauty();}
-        render();
-      },
-      onError: (err)=>console.warn('[watch] beauty 监听异常：',err)
-    });
-    if(w2)_watchers.push(w2);
-  }catch(e){console.warn('[CloudBase] beauty watch 启动失败：',e);}
-
-  // 教学周设置（单文档监听）
-  try{
-    const w3 = cbDb.collection(TERM_COL).doc(CONFIG_DOC).watch({
-      onChange: async (snapshot)=>{
-        if(snapshot && snapshot.docs && snapshot.docs.length){
-          const d = snapshot.docs[0];
-          delete d._id;delete d._openid;
-          _cachedTerm = d;
-        }else{_cachedTerm=null;}
-        render();
-      },
-      onError: (err)=>console.warn('[watch] term 监听异常：',err)
-    });
-    if(w3)_watchers.push(w3);
-  }catch(e){console.warn('[CloudBase] term watch 启动失败：',e);}
-}
-
-function startPolling(){
-  if(_pollingTimer)return;
-  _pollingTimer = setInterval(async ()=>{
-    if(cbReady){
-      try{await reloadAllFromCloud();render();}
-      catch(e){console.warn('[polling] 异常：',e);}
-    }
-  }, 30000);
-}
-
-function loadEvents(){return _cachedEvents.slice();}
-function genId(){return 'ev_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
-async function saveEventsCloud(evs){
-  // 写数据通过具体 CRUD（add / set / remove）在各操作里直接调云端；
-  // 本地缓存立即更新以便 UI 即时响应，watcher 收到推送后会再拉一次以确保一致。
-  _cachedEvents = (evs||[]).slice();
-  window.dispatchEvent(new CustomEvent('caldata:changed',{detail:_cachedEvents}));
-  render();
-}
-
-// 页面卸载或隐藏时清理长连接
-window.addEventListener('beforeunload', _cleanupCloud);
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='hidden'){_cleanupCloud();}
-  else if(document.visibilityState==='visible' && cbApp && !cbReady){initCloudBase();}
-});
-
-// 日历A 固定只有一种主题色；日历B 多色
 const COLORS_A = ['#3b82f6'];
 const COLORS_B = ['#e11d48','#f59e0b','#16a34a','#7c3aed','#0284c7','#ec4899'];
 let selCalInForm = 'A';
@@ -980,10 +688,205 @@ let filterCal = 'all';
 let parsedImportRows = [];
 let importMode = 'standard';
 let editingId = null;
-/* 分页状态 */
 let currentPage = 1;
 let pageSize = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
+/* ============ 云同步层 ============ */
+let sb = null;
+let _cloudEnabled = false;
+let _eventsCache = [];
+let _termCache = null;
+let _themeCache = null;
+let _cloudLastError = '';
+
+function initCloud(){
+  if(!SUPABASE_URL || !SUPABASE_ANON_KEY){ _cloudEnabled=false; return false; }
+  if(typeof supabase === 'undefined'){ _cloudEnabled=false; _cloudLastError='Supabase SDK 未加载'; return false; }
+  try{
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _cloudEnabled = true;
+    return true;
+  }catch(e){
+    _cloudEnabled = false;
+    _cloudLastError = e.message || String(e);
+    return false;
+  }
+}
+
+function updateSyncBadge(){
+  const el = document.getElementById('syncBadge');
+  const txt = document.getElementById('syncText');
+  if(!el || !txt) return;
+  el.classList.remove('cloud','offline');
+  if(_cloudEnabled){
+    el.classList.add('cloud');
+    txt.textContent = '云同步已连接';
+  }else{
+    el.classList.add('offline');
+    txt.textContent = '本地模式';
+    el.title = _cloudLastError ? ('本地模式：'+_cloudLastError) : '未配置 Supabase，仅本设备可用';
+  }
+}
+
+function rowToEvent(row){
+  return {
+    id: row.id,
+    calendarId: row.calendar_id || 'A',
+    title: row.title || '',
+    date: row.date || '',
+    startTime: row.start_time || '',
+    endTime: row.end_time || '',
+    allDay: !!row.all_day,
+    location: row.location || '',
+    repeat: row.repeat_rule || 'none',
+    remindBefore: row.remind_before != null ? String(row.remind_before) : '0',
+    description: row.description || '',
+    color: row.color || (row.calendar_id==='B'?'#e11d48':'#3b82f6'),
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+  };
+}
+function eventToRow(ev){
+  return {
+    id: ev.id,
+    calendar_id: ev.calendarId,
+    title: ev.title,
+    date: ev.date || '',
+    start_time: ev.startTime || '',
+    end_time: ev.endTime || '',
+    all_day: !!ev.allDay,
+    location: ev.location || '',
+    repeat_rule: ev.repeat || 'none',
+    remind_before: ev.remindBefore != null ? String(ev.remindBefore) : '0',
+    description: ev.description || '',
+    color: ev.color || '',
+    created_at: new Date(ev.createdAt || Date.now()).toISOString(),
+  };
+}
+
+function readLocalEvents(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch(e){ return []; }
+}
+function writeLocalEvents(list){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+async function fetchEvents(){
+  if(!_cloudEnabled){
+    _eventsCache = readLocalEvents();
+    return _eventsCache;
+  }
+  const { data, error } = await sb.from(CLOUD_EVENTS_TABLE).select('*');
+  if(error){
+    console.warn('云端读取日程失败，回退本地缓存：', error.message);
+    _eventsCache = readLocalEvents();
+    return _eventsCache;
+  }
+  _eventsCache = (data || []).map(rowToEvent);
+  writeLocalEvents(_eventsCache);
+  return _eventsCache;
+}
+
+async function upsertEventCloud(ev){
+  if(!_cloudEnabled){
+    const list = readLocalEvents();
+    const i = list.findIndex(e=>e.id===ev.id);
+    if(i>=0) list[i]=ev; else list.push(ev);
+    writeLocalEvents(list);
+    _eventsCache = list;
+    return;
+  }
+  const { error } = await sb.from(CLOUD_EVENTS_TABLE).upsert(eventToRow(ev));
+  if(error) throw error;
+  await fetchEvents();
+}
+
+async function deleteEventCloud(id){
+  if(!_cloudEnabled){
+    const list = readLocalEvents().filter(e=>e.id!==id);
+    writeLocalEvents(list);
+    _eventsCache = list;
+    return;
+  }
+  const { error } = await sb.from(CLOUD_EVENTS_TABLE).delete().eq('id', id);
+  if(error) throw error;
+  await fetchEvents();
+}
+
+async function clearAllEventsCloud(){
+  if(!_cloudEnabled){
+    writeLocalEvents([]);
+    _eventsCache = [];
+    return;
+  }
+  const { error } = await sb.from(CLOUD_EVENTS_TABLE).delete().neq('id', '');
+  if(error) throw error;
+  await fetchEvents();
+}
+
+async function bulkInsertEventsCloud(rows){
+  if(!_cloudEnabled){
+    const list = readLocalEvents();
+    list.push(...rows);
+    writeLocalEvents(list);
+    _eventsCache = list;
+    return;
+  }
+  const payload = rows.map(eventToRow);
+  const { error } = await sb.from(CLOUD_EVENTS_TABLE).insert(payload);
+  if(error) throw error;
+  await fetchEvents();
+}
+
+async function fetchSettings(){
+  if(!_cloudEnabled){
+    try{ _termCache = JSON.parse(localStorage.getItem(TERM_KEY)) || null; }catch(e){ _termCache = null; }
+    try{ _themeCache = JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY)) || null; }catch(e){ _themeCache = null; }
+    return;
+  }
+  const { data, error } = await sb.from(CLOUD_SETTINGS_TABLE).select('*');
+  if(error){
+    console.warn('云端读取设置失败，回退本地缓存：', error.message);
+    try{ _termCache = JSON.parse(localStorage.getItem(TERM_KEY)) || null; }catch(e){ _termCache = null; }
+    try{ _themeCache = JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY)) || null; }catch(e){ _themeCache = null; }
+    return;
+  }
+  _termCache = null;
+  _themeCache = null;
+  (data||[]).forEach(row=>{
+    if(row.key === 'term') _termCache = row.value;
+    else if(row.key === 'display_theme') _themeCache = row.value;
+  });
+  if(_termCache) try{ localStorage.setItem(TERM_KEY, JSON.stringify(_termCache)); }catch(e){}
+  if(_themeCache) try{ localStorage.setItem(DISPLAY_THEME_KEY, JSON.stringify(_themeCache)); }catch(e){}
+}
+
+async function saveSettingCloud(key, value){
+  if(!_cloudEnabled){
+    if(key==='term'){ try{ localStorage.setItem(TERM_KEY, JSON.stringify(value)); }catch(e){} _termCache = value; }
+    else if(key==='display_theme'){ try{ localStorage.setItem(DISPLAY_THEME_KEY, JSON.stringify(value)); }catch(e){} _themeCache = value; }
+    return;
+  }
+  const { error } = await sb.from(CLOUD_SETTINGS_TABLE).upsert({ key, value, updated_at: new Date().toISOString() });
+  if(error) throw error;
+  if(key==='term') _termCache = value;
+  else if(key==='display_theme') _themeCache = value;
+}
+
+async function refreshAllFromCloud(){
+  await fetchEvents();
+  await fetchSettings();
+  render();
+}
+
+/* ============ 兼容原逻辑：同步读取缓存 ============ */
+function loadEvents(){ return _eventsCache.slice(); }
+function loadTerm(){ return _termCache; }
+function loadDisplayTheme(){
+  if(_themeCache && typeof _themeCache === 'object') return _themeCache;
+  return Object.assign({}, DISPLAY_DEFAULTS);
+}
+function genId(){ return 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 /* ============ 渲染 ============ */
 const weekCN = ['周日','周一','周二','周三','周四','周五','周六'];
@@ -1024,7 +927,6 @@ function render(){
 
   document.querySelectorAll('.cal-switch').forEach(el=>{el.classList.toggle('active',el.dataset.cal===filterCal);});
 
-  /* ===== 多维度筛选 ===== */
   const kw=(document.getElementById('filterKeyword')?.value||'').trim().toLowerCase();
   const df=document.getElementById('filterDateFrom')?.value||'';
   const dt=document.getElementById('filterDateTo')?.value||'';
@@ -1032,16 +934,13 @@ function render(){
   const ad=document.getElementById('filterAllDay')?.value||'';
 
   let list = filterCal==='all'?all:filterCal==='A'?a:b;
-  // 关键词（标题 / 地点 / 描述）
   if(kw){
     list=list.filter(e=>(e.title||'').toLowerCase().includes(kw)
       ||(e.location||'').toLowerCase().includes(kw)
       ||(e.description||'').toLowerCase().includes(kw));
   }
-  // 日期范围（闭区间）
   if(df)list=list.filter(e=>e.date>=df);
   if(dt)list=list.filter(e=>e.date<=dt);
-  // 重复
   if(rep){
     list=list.filter(e=>{
       const r=e.repeat||'none';
@@ -1049,13 +948,11 @@ function render(){
       return r===rep;
     });
   }
-  // 全天/时段
   if(ad==='allday')list=list.filter(e=>!!e.allDay);
   else if(ad==='timed')list=list.filter(e=>!e.allDay);
 
   document.getElementById('filterCount').textContent=list.length;
 
-  // 副标题
   let sub='';
   if(filterCal==='all')sub=`共 ${all.length} 条日程`;
   else if(filterCal==='A')sub=`日历A · 共 ${a.length} 条`;
@@ -1064,7 +961,6 @@ function render(){
   if(activeChips.length){sub+=` · 已筛选 ${list.length} 条`;}
   document.getElementById('subInfo').textContent=sub;
 
-  // 渲染激活的筛选标签条
   renderFilterChips(activeChips);
 
   const rowsBox=document.getElementById('eventRows');
@@ -1076,7 +972,6 @@ function render(){
     return;
   }
 
-  /* ===== 分页处理 ===== */
   const total=list.length;
   _lastFilteredTotal=total;
   let totalPages=Math.ceil(total/pageSize);
@@ -1085,7 +980,6 @@ function render(){
   const start=(currentPage-1)*pageSize;
   const pageList=list.slice(start,start+pageSize);
 
-  // 渲染当前页的行
   rowsBox.innerHTML=pageList.map(e=>{
     const dt2=new Date(e.date+'T00:00:00');
     const w=weekCN[dt2.getDay()];
@@ -1109,23 +1003,19 @@ function render(){
     </div>`;
   }).join('');
 
-  // 渲染分页控件
   renderPagination(total,totalPages);
 }
 
-/* 关键词高亮（命中段加粗） */
 function highlightKw(text,kw){
   if(!kw)return text;
   const reg=new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
   return text.replace(reg,m=>`<mark style="background:#fff3a3;color:#1f2329;padding:0 2px;border-radius:2px;">${m}</mark>`);
 }
 
-/* 分页控件渲染 */
 function renderPagination(total,totalPages){
   const box=document.getElementById('pagination');
   if(!box)return;
   if(totalPages<=1){
-    // 仅一页时仍显示条目数与每页大小选择
     box.innerHTML=`
       <div class="page-info">
         <span>共 <strong>${total}</strong> 条</span>
@@ -1139,20 +1029,14 @@ function renderPagination(total,totalPages){
       <div class="page-nav"></div>`;
     return;
   }
-
-  // 构造页码按钮：首尾 + 当前附近 + 省略号
   const btns=[];
   btns.push(`<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>‹ 上一页</button>`);
   const add=p=>btns.push(`<button class="page-btn${p===currentPage?' active':''}" onclick="goToPage(${p})">${p}</button>`);
   const ellipsis=()=>btns.push(`<span class="page-ellipsis">…</span>`);
-  const p=currentPage;
-  const tp=totalPages;
-  // 1
+  const p=currentPage, tp=totalPages;
   add(1);
-  if(tp===1){/* noop */}
-  else if(tp<=7){
-    for(let i=2;i<=tp;i++)add(i);
-  }else{
+  if(tp<=7){ for(let i=2;i<=tp;i++)add(i); }
+  else{
     if(p>3)ellipsis();
     const s=Math.max(2,p-1),e=Math.min(tp-1,p+1);
     for(let i=s;i<=e;i++)add(i);
@@ -1184,24 +1068,13 @@ function goToPage(p){
   if(p<1||p>tp||p===currentPage)return;
   currentPage=p;
   render();
-  // 滚动到列表顶部
   const list=document.querySelector('.event-list');
   if(list)list.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function changePageSize(v){
-  pageSize=parseInt(v,10)||20;
-  currentPage=1;
-  render();
-}
-function jumpPage(input){
-  const p=parseInt(input.value,10);
-  if(!p||p<1)return;
-  goToPage(p);
-}
-/* 获取当前筛选后的总数（供 goToPage 计算总页数时复用，避免重写筛选逻辑） */
+function changePageSize(v){ pageSize=parseInt(v,10)||20; currentPage=1; render(); }
+function jumpPage(input){ const p=parseInt(input.value,10); if(!p||p<1)return; goToPage(p); }
 let _lastFilteredTotal=0;
-function filteredTotal(){return _lastFilteredTotal;}
-/* 汇总当前激活的筛选项，用于生成标签 */
+function filteredTotal(){ return _lastFilteredTotal; }
 function getActiveChips(){
   const chips=[];
   if(filterCal==='A')chips.push({k:'cal',label:'日历A'});
@@ -1233,10 +1106,9 @@ function clearChip(k){
   else if(k==='ad'){document.getElementById('filterAllDay').value='';}
   render();
 }
-function onFilterChange(){currentPage=1;render();}
+function onFilterChange(){ currentPage=1; render(); }
 function resetFilters(){
-  filterCal='all';
-  currentPage=1;
+  filterCal='all'; currentPage=1;
   document.getElementById('filterKeyword').value='';
   document.getElementById('filterDateFrom').value='';
   document.getElementById('filterDateTo').value='';
@@ -1244,11 +1116,10 @@ function resetFilters(){
   document.getElementById('filterAllDay').value='';
   render();
 }
-
 function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function setFilter(c){filterCal=c;currentPage=1;backToCalView();render();}
+function setFilter(c){filterCal=c;currentPage=1;render();}
 
-/* ============ 创建/编辑（简洁单栏表单） ============ */
+/* ============ 创建/编辑 ============ */
 function openCreate(){
   editingId=null;
   document.getElementById('editTitle').textContent='新建日程';
@@ -1261,8 +1132,6 @@ function openCreate(){
   document.getElementById('evAllDay').checked=false;
   toggleAllDay();
   document.getElementById('evLocation').value='';
-  document.getElementById('evAttendees').value='';
-  document.getElementById('evFreeBusy').value='busy';
   document.getElementById('evRepeat').value='none';
   document.getElementById('evRemind').value='15';
   document.getElementById('evDesc').value='';
@@ -1289,8 +1158,6 @@ function openEdit(id){
   document.getElementById('evEnd').value=ev.endTime||'10:00';
   toggleAllDay();
   document.getElementById('evLocation').value=ev.location||'';
-  document.getElementById('evAttendees').value=ev.attendees||'';
-  document.getElementById('evFreeBusy').value=ev.freeBusy||'busy';
   setRemindValue(ev.remindBefore);
   document.getElementById('evDesc').value=ev.description||'';
   const rep=ev.repeat||'none';
@@ -1317,20 +1184,20 @@ function openEdit(id){
     onRepeatChange();
   }
   selectCal(ev.calendarId||'A');
-  selColor=ev.color||(ev.calendarId==='A'?calAColor():calBAccent());
+  selColor=ev.color||(ev.calendarId==='A'?'#3b82f6':'#e11d48');
   renderColorPicker();
   document.getElementById('modalEdit').classList.add('show');
 }
 function selectCal(c){
   selCalInForm=c;
   document.querySelectorAll('.cal-option').forEach(el=>{el.classList.toggle('selected',el.dataset.cal===c);});
-  selColor=c==='A'?calAColor():calBAccent();
+  selColor = c==='A'?'#3b82f6':'#e11d48';
   renderColorPicker();
 }
 function renderColorPicker(){
-  const colors=selCalInForm==='A'?[calAColor()]:COLORS_B;
+  const colors=selCalInForm==='A'?COLORS_A:COLORS_B;
   const box=document.getElementById('colorPicker');
-  let html=colors.map(c=>`<span class="color-dot ${c===selColor?'sel':''}" style="background:${c};color:${c};" onclick="pickColor('${c}')"></span>`).join('');
+  let html=colors.map(c=>`<div class="color-dot ${c===selColor?'sel':''}" style="background:${c};color:${c};" onclick="pickColor('${c}')"></div>`).join('');
   if(selCalInForm==='A') html+='<span class="color-tip">商务日程使用统一的商务蓝色</span>';
   else html+='<span class="color-tip">主题日历可选多种彩色</span>';
   box.innerHTML=html;
@@ -1343,7 +1210,6 @@ function toggleAllDay(){
   document.getElementById('evStart').style.opacity=all?.5:1;
   document.getElementById('evEnd').style.opacity=all?.5:1;
 }
-/* 提醒值回填：若下拉框中没有该选项，则临时补充一个，避免编辑时丢失原值 */
 function setRemindValue(v){
   const sel=document.getElementById('evRemind');
   const val=String(v==null||v===''?'0':v);
@@ -1376,175 +1242,7 @@ function buildCustomRepeatValue(){
   else if(endType==='until')obj.until=document.getElementById('crUntil').value||'';
   return 'custom:'+JSON.stringify(obj);
 }
-
-/* ============ 日历美化（日历A / 日历B 主题） ============ */
-const WD_CN=['周日','周一','周二','周三','周四','周五','周六'];
-const SWATCH_A=['#3b82f6','#0ea5e9','#6366f1','#0d9488','#f97316','#e11d48'];
-const SWATCH_B=['#e11d48','#f59e0b','#16a34a','#7c3aed','#0284c7','#ec4899'];
-/* 与展示页保持一致的默认 7 天主题 */
-const DEFAULT_THEMES_7=[
-  {color:'#f59e0b',bg:'#fef3c7',gradient:'linear-gradient(135deg,#f6d365,#fda085)',img:'https://gips1.baidu.com/it/u=3426953913,2602936109&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#2563eb',bg:'#dbeafe',gradient:'linear-gradient(135deg,#1e3c72,#2a5298)',img:'https://gips3.baidu.com/it/u=187311376,3321382880&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#ea580c',bg:'#ffedd5',gradient:'linear-gradient(135deg,#f59e0b,#ea580c)',img:'https://gips2.baidu.com/it/u=222082125,885693681&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#16a34a',bg:'#dcfce7',gradient:'linear-gradient(135deg,#11998e,#38ef7d)',img:'https://gips1.baidu.com/it/u=3063342635,2708302195&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#7c3aed',bg:'#ede9fe',gradient:'linear-gradient(135deg,#5f2c82,#49a09d)',img:'https://gips0.baidu.com/it/u=4008482774,3350441090&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#e11d48',bg:'#ffe4e6',gradient:'linear-gradient(135deg,#ec4899,#f43f5e)',img:'https://gips0.baidu.com/it/u=596943118,1642531063&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'},
-  {color:'#0284c7',bg:'#e0f2fe',gradient:'linear-gradient(135deg,#4facfe,#00f2fe)',img:'https://gips2.baidu.com/it/u=879315578,1992116744&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280'}
-];
-function defaultBeauty(){
-  return {
-    calA:{color:'#3b82f6',name:'日历A · 商务日程'},
-    calB:{accent:'#e11d48',name:'日历B · 主题日历'},
-    themes:DEFAULT_THEMES_7.map(t=>({color:t.color,bg:t.bg,gradient:t.gradient,img:t.img}))
-  };
-}
-function loadBeauty(){
-  const d=defaultBeauty();
-  const raw=_cachedBeauty;
-  if(!raw)return d;
-  if(raw.calA)Object.assign(d.calA,raw.calA);
-  if(raw.calB)Object.assign(d.calB,raw.calB);
-  if(Array.isArray(raw.themes))raw.themes.forEach((t,i)=>{if(d.themes[i]&&t)Object.assign(d.themes[i],t);});
-  return d;
-}
-function calAColor(){const c=loadBeauty().calA;return (c&&c.color)||'#3b82f6';}
-function calBAccent(){const c=loadBeauty().calB;return (c&&c.accent)||'#e11d48';}
-function escAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-
-
-/* 视图切换：日程管理 <-> 日历美化 */
-function openBeauty(){
-  _beautyDraft=loadBeauty();
-  document.getElementById('calView').style.display='none';
-  document.getElementById('beautyView').style.display='';
-  const btn=document.getElementById('btnBeauty');
-  if(btn)btn.classList.add('on');
-  renderBeautyForm();
-}
-function backToCalView(){
-  const bv=document.getElementById('beautyView');
-  if(bv)bv.style.display='none';
-  const cv=document.getElementById('calView');
-  if(cv)cv.style.display='';
-  const btn=document.getElementById('btnBeauty');
-  if(btn)btn.classList.remove('on');
-}
-
-function renderBeautyForm(){
-  if(!_beautyDraft)_beautyDraft=loadBeauty();
-  const cfg=_beautyDraft;
-  document.getElementById('bCalAName').value=cfg.calA.name||'';
-  document.getElementById('bCalAPicker').value=cfg.calA.color||'#3b82f6';
-  document.getElementById('bCalAVal').textContent=cfg.calA.color||'#3b82f6';
-  document.getElementById('bCalASwatches').innerHTML=SWATCH_A.map(c=>
-    `<span class="sw ${c===cfg.calA.color?'sel':''}" style="background:${c};color:${c};" onclick="pickCalAColor('${c}')" title="${c}"></span>`).join('');
-  updateCalAPreview(cfg.calA.color||'#3b82f6');
-
-  document.getElementById('bCalBName').value=cfg.calB.name||'';
-  document.getElementById('bCalBAccent').value=cfg.calB.accent||'#e11d48';
-  document.getElementById('bCalBAccentVal').textContent=cfg.calB.accent||'#e11d48';
-
-  const box=document.getElementById('bThemesBox');
-  box.innerHTML=cfg.themes.map((t,i)=>`
-    <div class="bt-item">
-      <div class="bt-head"><span class="bt-dot" style="background:${t.color};"></span>${WD_CN[i]}主题</div>
-      <div class="bt-field">
-        <label>主色</label>
-        <input type="color" value="${t.color}" oninput="onThemeInput(${i},'color',this.value)">
-        <input type="text" value="${escAttr(t.color)}" oninput="onThemeInput(${i},'color',this.value)">
-      </div>
-      <div class="bt-field">
-        <label>浅底</label>
-        <input type="color" value="${t.bg}" oninput="onThemeInput(${i},'bg',this.value)">
-        <input type="text" value="${escAttr(t.bg)}" oninput="onThemeInput(${i},'bg',this.value)">
-      </div>
-      <div class="bt-field">
-        <label>渐变</label>
-        <input type="text" value="${escAttr(t.gradient)}" oninput="onThemeInput(${i},'gradient',this.value)" placeholder="CSS 渐变，如 linear-gradient(...)">
-      </div>
-      <div class="bt-field">
-        <label>插图</label>
-        <input type="text" value="${escAttr(t.img)}" oninput="onThemeInput(${i},'img',this.value)" placeholder="9:16 竖版插图 URL">
-      </div>
-      <div class="bt-preview" style="background:${escAttr(t.gradient)}">
-        <img src="${escAttr(t.img)}" alt="${WD_CN[i]}主题插图" onerror="this.style.opacity=.15">
-      </div>
-      <div class="bt-bgbar" style="background:${escAttr(t.bg)};color:${escAttr(t.color)}">浅底预览 · 卡片背景色 ${escAttr(t.bg)}</div>
-    </div>`).join('');
-}
-function updateCalAPreview(color){
-  const tag=document.getElementById('bCalATag');
-  const num=document.getElementById('bCalAPrevNum');
-  const bar=document.getElementById('bCalAPrevBar');
-  if(tag)tag.style.background=color;
-  if(num)num.style.color=color;
-  if(bar)bar.style.background=color;
-}
-function pickCalAColor(c){
-  _beautyDraft.calA.color=c;
-  document.getElementById('bCalAPicker').value=c;
-  document.getElementById('bCalAVal').textContent=c;
-  document.querySelectorAll('#bCalASwatches .sw').forEach(el=>{
-    el.classList.toggle('sel',(el.getAttribute('title')||'')===c);
-  });
-  updateCalAPreview(c);
-}
-function onBeautyColorInput(which,val){
-  if(which==='A'){
-    _beautyDraft.calA.color=val;
-    document.getElementById('bCalAVal').textContent=val;
-    document.querySelectorAll('#bCalASwatches .sw').forEach(el=>{
-      el.classList.toggle('sel',(el.getAttribute('title')||'')===val);
-    });
-    updateCalAPreview(val);
-  }else{
-    _beautyDraft.calB.accent=val;
-    document.getElementById('bCalBAccentVal').textContent=val;
-  }
-}
-function onThemeInput(i,key,val){
-  if(!_beautyDraft||!_beautyDraft.themes[i])return;
-  _beautyDraft.themes[i][key]=val;
-  const items=document.querySelectorAll('#bThemesBox .bt-item');
-  const it=items[i];
-  if(!it)return;
-  const t=_beautyDraft.themes[i];
-  const dot=it.querySelector('.bt-head .bt-dot');
-  if(dot)dot.style.background=t.color;
-  const pv=it.querySelector('.bt-preview');
-  if(pv){
-    pv.style.background=t.gradient;
-    const img=pv.querySelector('img');
-    if(img){img.style.opacity='';img.src=t.img;}
-  }
-  const bar=it.querySelector('.bt-bgbar');
-  if(bar){bar.style.background=t.bg;bar.style.color=t.color;bar.textContent='浅底预览 · 卡片背景色 '+t.bg;}
-}
-async function saveBeauty(){
-  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
-  if(!_beautyDraft)_beautyDraft=loadBeauty();
-  _beautyDraft.calA.name=(document.getElementById('bCalAName').value||'').trim()||'日历A · 商务日程';
-  _beautyDraft.calB.name=(document.getElementById('bCalBName').value||'').trim()||'日历B · 主题日程';
-  try{
-    await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).set(_beautyDraft);
-    _cachedBeauty = JSON.parse(JSON.stringify(_beautyDraft));
-    toast('美化设置已保存，展示页将自动同步','success');
-  }catch(err){toast('保存失败：'+err.message,'error');}
-}
-async function resetBeauty(){
-  if(!cbReady){toast('云数据库未连接','error');return;}
-  if(!confirm('确定恢复默认美化设置？当前自定义的主题色与插图将被清除。'))return;
-  try{
-    await cbDb.collection(BEAUTY_COL).doc(CONFIG_DOC).remove();
-    _cachedBeauty=null;
-    _beautyDraft=defaultBeauty();
-    renderBeautyForm();
-    toast('已恢复默认美化设置','info');
-  }catch(err){toast('重置失败：'+err.message,'error');}
-}
-
 async function saveEvent(){
-  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
   const title=document.getElementById('evTitle').value.trim();
   const date=document.getElementById('evDate').value;
   if(!title){toast('请输入日程标题','error');return;}
@@ -1555,130 +1253,64 @@ async function saveEvent(){
   const ev={
     id:editingId||genId(),
     calendarId:selCalInForm,
-    title,date,
+    title, date,
     startTime:allDay?'':document.getElementById('evStart').value,
     endTime:allDay?'':document.getElementById('evEnd').value,
     allDay,
     location:document.getElementById('evLocation').value.trim(),
-    attendees:document.getElementById('evAttendees').value.trim(),
     repeat,
     remindBefore:document.getElementById('evRemind').value,
-    freeBusy:document.getElementById('evFreeBusy').value||'busy',
     description:document.getElementById('evDesc').value.trim(),
     color:selColor,
-    createdAt:editingId?((_cachedEvents.find(e=>e.id===editingId)||{}).createdAt||Date.now()):Date.now(),
-    updatedAt:Date.now(),
+    createdAt:editingId?(loadEvents().find(e=>e.id===editingId)?.createdAt||Date.now()):Date.now(),
   };
   try{
-    if(editingId){
-      const old = _cachedEvents.find(e=>e.id===editingId);
-      if(old && old._cloudId){
-        const toUpd = Object.assign({}, ev);
-        delete toUpd._cloudId;
-        await cbDb.collection(EVENTS_COL).doc(old._cloudId).set(toUpd);
-      }else{
-        await cbDb.collection(EVENTS_COL).add(ev);
-      }
-    }else{
-      await cbDb.collection(EVENTS_COL).add(ev);
-    }
+    await upsertEventCloud(ev);
     closeModal('modalEdit');
-    toast(editingId?'日程已更新':'日程创建成功','success');
-    // 触发 reload（watcher 也会触发，但为了立即可见，主动拉一次）
-    await reloadAllFromCloud();
     render();
+    toast(editingId?'日程已更新（已同步云端）':'日程已创建（已同步云端）','success');
   }catch(err){
-    toast('保存失败：'+err.message,'error');
     console.error(err);
+    toast('保存失败：'+(err.message||err),'error');
   }
 }
 async function delEvent(id){
-  if(!cbReady){toast('云数据库未连接','error');return;}
   if(!confirm('确定删除此日程？'))return;
   try{
-    const ev = _cachedEvents.find(e=>e.id===id);
-    if(ev && ev._cloudId){await cbDb.collection(EVENTS_COL).doc(ev._cloudId).remove();}
+    await deleteEventCloud(id);
+    render();
     toast('已删除','info');
-    await reloadAllFromCloud();render();
-  }catch(err){toast('删除失败：'+err.message,'error');}
-}
-/* ============ 清空指定日历分类 ============ */
-let clearTarget='A';
-/* 读取日历自定义名称（与「日历美化」设置一致） */
-function calDisplayName(cal){
-  const b=loadBeauty();
-  const raw=cal==='A'?b.calA.name:b.calB.name;
-  return raw||(cal==='A'?'日历A · 商务日程':'日历B · 主题日历');
-}
-function openClear(){
-  const all=loadEvents();
-  if(!all.length){toast('当前没有任何日程','info');return;}
-  clearTarget=(filterCal==='A'||filterCal==='B')?filterCal:'A';
-  renderClearModal();
-  document.getElementById('modalClear').classList.add('show');
-}
-function renderClearModal(){
-  const all=loadEvents();
-  const cntA=all.filter(e=>e.calendarId==='A').length;
-  const cntB=all.filter(e=>e.calendarId==='B').length;
-  const opts=[
-    {k:'all',name:'全部日历',cnt:all.length,color:'linear-gradient(90deg,#3b82f6,#e11d48)'},
-    {k:'A',name:calDisplayName('A'),cnt:cntA,color:calAColor()},
-    {k:'B',name:calDisplayName('B'),cnt:cntB,color:calBAccent()},
-  ];
-  document.getElementById('clearList').innerHTML=opts.map(o=>
-    `<div class="clear-opt${clearTarget===o.k?' on':''}" onclick="setClearTarget('${o.k}')">
-       <span class="co-dot" style="background:${o.color};"></span>
-       <span class="co-name">${escapeHtml(o.name)}</span>
-       <span class="co-cnt">${o.cnt} 条</span>
-     </div>`).join('');
-  const cur=opts.find(o=>o.k===clearTarget)||opts[0];
-  const warn=document.getElementById('clearWarn');
-  const btn=document.getElementById('clearConfirmBtn');
-  if(!cur.cnt){
-    warn.className='clear-warn safe';
-    warn.innerHTML=`「<b>${escapeHtml(cur.name)}</b>」中暂无日程，无需清空。`;
-    btn.disabled=true;
-  }else{
-    warn.className='clear-warn';
-    warn.innerHTML=`将永久删除「<b>${escapeHtml(cur.name)}</b>」下的 <b>${cur.cnt}</b> 条日程，删除后<b>不可恢复</b>。`;
-    btn.disabled=false;
+  }catch(err){
+    console.error(err);
+    toast('删除失败：'+(err.message||err),'error');
   }
 }
-function setClearTarget(k){clearTarget=k;renderClearModal();}
-async function doClear(){
-  if(!cbReady){toast('云数据库未连接','error');return;}
-  const all=loadEvents();
-  const label=clearTarget==='all'?'全部日历':calDisplayName(clearTarget);
-  const targets=clearTarget==='all'?all:all.filter(e=>e.calendarId===clearTarget);
-  if(!targets.length){toast(`「${label}」中暂无日程`,'info');return;}
+async function clearAll(){
+  const n=loadEvents().length;
+  if(!n){toast('当前没有日程','info');return;}
+  if(!confirm(`确定清空全部 ${n} 条日程？此操作不可恢复。`))return;
   try{
-    // 逐条删除（CloudBase 单次批量删除需权限；逐条在小数据量下足够）
-    for(const ev of targets){
-      if(ev._cloudId){await cbDb.collection(EVENTS_COL).doc(ev._cloudId).remove();}
-    }
-    currentPage=1;
-    closeModal('modalClear');
-    toast(`已清空「${label}」共 ${targets.length} 条日程`,'success');
-    await reloadAllFromCloud();render();
-  }catch(err){toast('清空失败：'+err.message,'error');}
+    await clearAllEventsCloud();
+    render();
+    toast('已清空全部日程','info');
+  }catch(err){
+    console.error(err);
+    toast('清空失败：'+(err.message||err),'error');
+  }
 }
-function closeModal(id){if(document.getElementById(id))document.getElementById(id).classList.remove('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 /* ============ 教学周设置 ============ */
-/* 默认作息（12 节），可在「教学周设置」中修改 */
 const DEFAULT_PERIODS = [
   {s:'08:00',e:'08:45'},{s:'08:50',e:'09:35'},{s:'09:50',e:'10:35'},{s:'10:40',e:'11:25'},
   {s:'13:30',e:'14:15'},{s:'14:20',e:'15:05'},{s:'15:20',e:'16:05'},{s:'16:10',e:'16:55'},
   {s:'18:30',e:'19:15'},{s:'19:20',e:'20:05'},{s:'20:10',e:'20:55'},{s:'21:00',e:'21:45'}
 ];
-function loadTerm(){return _cachedTerm?Object.assign({},_cachedTerm):null;}
 function ymdIndex(y,m,d){return Math.round(new Date(y,m-1,d).getTime()/86400000);}
 function parseYMDText(s){
   const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   return m?{y:+m[1],m:+m[2],d:+m[3]}:null;
 }
-/* 由教学周起始日 + 第 N 周 + 星期偏移（周一=0）推出具体日期 */
 function termDateOf(startStr,week,offset){
   const sd=parseYMDText(startStr);
   if(!sd)return '';
@@ -1746,7 +1378,6 @@ function openTermSetting(){
 }
 function resetPeriods(){renderPeriodGrid(DEFAULT_PERIODS);toast('已恢复默认作息时间','info');}
 async function saveTermSetting(){
-  if(!cbReady){toast('云数据库未连接，无法保存','error');return;}
   const s=document.getElementById('termStart').value;
   const e=document.getElementById('termEnd').value;
   if(!s||!e){toast('请填写教学周的开始与结束日期','error');return;}
@@ -1754,14 +1385,14 @@ async function saveTermSetting(){
   if(!sd||!ed||ymdIndex(ed.y,ed.m,ed.d)<ymdIndex(sd.y,sd.m,sd.d)){toast('日期填写有误，请检查','error');return;}
   const data={startDate:s,endDate:e,periods:collectPeriods(),updatedAt:Date.now()};
   try{
-    await cbDb.collection(TERM_COL).doc(CONFIG_DOC).set(data);
-    _cachedTerm = data;
+    await saveSettingCloud('term', data);
     closeModal('modalTerm');
     const total=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
     toast(`教学周已保存：共 ${total} 周`,'success');
-    const wd=new Date(sd.y,sd.m-1,sd.d).getDay();
-    if(wd!==1)setTimeout(()=>toast('提醒：教学周开始日不是周一，课表日期可能整体错位','info'),2400);
-  }catch(err){toast('保存失败：'+err.message,'error');}
+  }catch(err){
+    console.error(err);
+    toast('保存失败：'+(err.message||err),'error');
+  }
 }
 
 /* ============ 模板下载 ============ */
@@ -1789,6 +1420,8 @@ function downloadTemplate(){
 }
 
 /* ============ 表格导入 ============ */
+let lastFile=null;
+let lastEncoding='';
 function openImport(){
   parsedImportRows=[];
   importMode='standard';
@@ -1819,17 +1452,11 @@ function handleFile(file){
       const data=new Uint8Array(e.target.result);
       let wb;
       if(isCsv){
-        // CSV 是纯文本文件，需先按字节识别编码再交给解析库：
-        // 中文版 Excel「另存为 CSV」默认使用 GBK，若直接按二进制交给解析库，
-        // 标题、地点等中文会显示为乱码。这里识别后再以文本形式解析。
         const dec=decodeTextBytes(data,document.getElementById('fileEncoding').value);
         lastEncoding=dec.enc;
         wb=XLSX.read(dec.text,{type:'string',raw:true});
       }else{
-        // xlsx / xls 为二进制格式（内部自带编码信息），不需也不可做文本编码转换
         lastEncoding='';
-        // raw:true 关闭表格软件对日期的自动推断与格式改写：避免「2026-02-30」这类不存在的日期被悄悄
-        // 改写成 2026-03-02；日期统一交给 normalizeDate 换算与合法性校验，不受运行环境时区影响
         wb=XLSX.read(data,{type:'array',raw:true});
       }
       const sheet=wb.Sheets[wb.SheetNames[0]];
@@ -1839,16 +1466,7 @@ function handleFile(file){
   };
   reader.readAsArrayBuffer(file);
 }
-/* 手动切换编码后，用同一个文件重新解析 */
-function onEncodingChange(){
-  if(lastFile)handleFile(lastFile);
-}
-/* 文本编码识别与解码
-   策略：手动指定优先 → BOM 次之 → 纯英文无歧义按 UTF-8
-   → 严格 UTF-8 试解，通过即判定 UTF-8；不通过（非法字节序列）判定 GBK/GB18030。
-   说明：GBK 中文的字节序列几乎不可能全部凑成合法 UTF-8 序列（连续多字节均需符合 UTF-8
-   结构），而 UTF-8 中文被误按 GBK 解码后同样会产出成片汉字，无法靠字符特征区分，
-   因此以「能否通过严格 UTF-8 校验」为准，比按汉字数量打分可靠。 */
+function onEncodingChange(){ if(lastFile)handleFile(lastFile); }
 function decodeTextBytes(u8,force){
   const mode=String(force||'auto').toLowerCase();
   const useGBK=()=>{try{return {text:new TextDecoder('gb18030').decode(u8),enc:'GBK/GB18030'};}
@@ -1856,22 +1474,18 @@ function decodeTextBytes(u8,force){
   const useUTF8=()=>({text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8'});
   if(mode==='gbk')return useGBK();
   if(mode==='utf-8'||mode==='utf8')return useUTF8();
-  // 字节序标记（BOM）
   if(u8.length>=3&&u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF)
     return {text:new TextDecoder('utf-8').decode(u8.subarray(3)),enc:'UTF-8（含 BOM）'};
   if(u8.length>=2&&u8[0]===0xFF&&u8[1]===0xFE)
     return {text:new TextDecoder('utf-16le').decode(u8.subarray(2)),enc:'UTF-16LE（含 BOM）'};
   if(u8.length>=2&&u8[0]===0xFE&&u8[1]===0xFF)
     return {text:new TextDecoder('utf-16be').decode(u8.subarray(2)),enc:'UTF-16BE（含 BOM）'};
-  // 纯英文（无高位字节）不存在编码歧义
   let ascii=true;
   for(let i=0;i<u8.length;i++){if(u8[i]>=0x80){ascii=false;break;}}
   if(ascii)return {text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8（纯英文）'};
-  // 严格 UTF-8 试解：遇到非法字节序列会抛出
   try{return {text:new TextDecoder('utf-8',{fatal:true}).decode(u8),enc:'UTF-8'};}catch(e){}
   return useGBK();
 }
-/* 校验年月日是否真实存在：拦截 2026-13-45、2026-02-30 这类"格式能匹配、实际不存在"的日期 */
 function isValidYMD(y,m,d){
   y=Number(y);m=Number(m);d=Number(d);
   if(!isFinite(y)||!isFinite(m)||!isFinite(d))return false;
@@ -1886,7 +1500,6 @@ function isValidYMD(y,m,d){
 function normalizeDate(v){
   if(v==null||v==='')return'';
   if(v instanceof Date){return isNaN(v.getTime())?'':formatDate(v);}
-  // 表格软件把日期存成「序列号」时用内置换算还原：纯数值计算，不受运行环境时区影响
   if(typeof v==='number'&&isFinite(v)&&v>=1&&v<=2958465){
     try{
       const o=XLSX.SSF.parse_date_code(v);
@@ -1900,8 +1513,6 @@ function normalizeDate(v){
   if(m){return isValidYMD(m[1],m[2],m[3])?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
   const m2=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if(m2){return isValidYMD(m2[3],m2[1],m2[2])?`${m2[3]}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`:'';}
-  // 兜底：两位年份的「月-日-年」简写（部分表格软件会输出 11-15-26 这种形式）
-  // 年份还原规则与主流表格软件一致：0-29 视为 20xx，30-99 视为 19xx
   const m3=s.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
   if(m3){
     const yy=Number(m3[3]);
@@ -1919,15 +1530,13 @@ function normalizeTime(v){
 }
 function parseRows(rows){
   if(!rows.length){showImportResult('表格为空',true);return;}
-  // 表头含「星期 + 周次 + 节次/课程」等特征列 → 判定为一维课表，走课表换算导入
   if(isTimetableHeader(rows[0])){parseTimetable(rows);return;}
   importMode='standard';
   const body=rows.slice(1);
-  const parsed=[];const errs=[];
+  const parsed=[];
   const validRepeats=['none','daily','workday','weekly','monthly','yearly','custom'];
   body.forEach((r,i)=>{
     if(!r||!r.length||r.every(c=>!String(c).trim()))return;
-    // 跳过空行与说明行（模板中第一列为 ※ 的行为说明行）
     const c0=String(r[0]==null?'':r[0]).trim();
     const c1=String(r[1]==null?'':r[1]).trim();
     if(!c0&&!c1)return;
@@ -1944,15 +1553,12 @@ function parseRows(rows){
     const rowNo=i+2;
     const validCal=['A','B'].includes(cal)?cal:'A';
     const validRepeat=validRepeats.includes(repeat)?repeat:'none';
-    if(!title)errs.push({row:rowNo,msg:'缺少标题'});
-    if(!date)errs.push({row:rowNo,msg:'日期格式错误或为空'});
     parsed.push({
       calendarId:validCal,title,date,startTime,endTime,location,
       repeat:validRepeat,remindBefore:remind,description:desc,
       allDay:!startTime,
       color:validCal==='A'?'#3b82f6':'#e11d48',
-      _err:!title||!date,
-      _rowNo:rowNo,
+      _err:!title||!date, _rowNo:rowNo,
     });
   });
   parsedImportRows=parsed;
@@ -1974,7 +1580,6 @@ function parseRows(rows){
   document.getElementById('btnConfirmImport').disabled=validCnt===0;
   showImportResult(`解析完成${lastEncoding?`（文件编码：${lastEncoding}）`:''}：共识别 ${parsed.length} 条，有效 ${validCnt} 条${errCnt?`，${errCnt} 条将被跳过`:''}`,errCnt>0&&validCnt===0);
 }
-/* ============ 一维课表识别与换算导入（自动批量归入日历B） ============ */
 function isTimetableHeader(row){
   const h=(row||[]).map(x=>String(x==null?'':x).trim()).join('|');
   return h.indexOf('星期')>=0&&h.indexOf('周次')>=0&&(h.indexOf('节次')>=0||h.indexOf('课程')>=0);
@@ -1991,20 +1596,12 @@ function buildTimetableCols(header){
     return -1;
   };
   return {
-    weekday:find('星期','周几'),
-    weeks:find('周次'),
-    period:find('节次'),
-    loc:find('上课地点','地点','教室'),
-    cls:find('授课班级','班级'),
-    num:find('人数'),
-    course:find('课程名称','课程'),
-    teacher:find('任课教师','教师'),
-    type:find('学时分类','分类','课程类型')
+    weekday:find('星期','周几'), weeks:find('周次'), period:find('节次'),
+    loc:find('上课地点','地点','教室'), cls:find('授课班级','班级'), num:find('人数'),
+    course:find('课程名称','课程'), teacher:find('任课教师','教师'), type:find('学时分类','分类','课程类型')
   };
 }
-/* 星期文本 → 距周一的天数偏移（周一=0 … 周日=6） */
 const WD_OFFSET={'星期一':0,'周一':0,'一':0,'星期二':1,'周二':1,'二':1,'星期三':2,'周三':2,'三':2,'星期四':3,'周四':3,'四':3,'星期五':4,'周五':4,'五':4,'星期六':5,'周六':5,'六':5,'星期日':6,'星期天':6,'周日':6,'周天':6,'日':6,'天':6};
-/* 周次文本 → 周次数组：支持「1-5,8-15周」「5,8-13周」「1-6,8-17周[1-2节]」等写法 */
 function parseWeekList(str){
   const s=String(str==null?'':str).replace(/\[[^\]]*\]/g,'').replace(/[周\s]/g,'');
   if(!s)return [];
@@ -2023,7 +1620,6 @@ function parseWeekList(str){
   });
   return Array.from(new Set(out)).sort((a,b)=>a-b);
 }
-/* 节次文本 → [起始节, 结束节] */
 function parsePeriodRange(str){
   const s=String(str==null?'':str);
   const m=s.match(/(\d+)\s*[-~—－]\s*(\d+)/);
@@ -2039,7 +1635,6 @@ function periodRangeToTime(range,periods){
   const eNode=list[range[1]-1]||sNode;
   return {start:sNode.s||'',end:eNode.e||sNode.s||''};
 }
-/* 同门课程固定配色，让日历B更易区分 */
 function colorOfCourse(name){
   const s=String(name||'');
   let h=0;
@@ -2069,7 +1664,7 @@ function showTimetablePreview(parsed,note){
   if(errCnt)msg+=`，${errCnt} 条将被跳过`;
   if(parsed.length>MAX)msg+=`（预览仅显示前 ${MAX} 条）`;
   if(note)msg+='<br>'+note;
-  msg+='<br><span style="font-size:12px;opacity:.85;">提示：导入为追加方式；如为同一份课表重复导入，请先点击侧栏「🧹 清空日程」清除日历B中以往导入的课程。</span>';
+  msg+='<br><span style="font-size:12px;opacity:.85;">提示：导入为追加方式；如为同一份课表重复导入，请先清空日历B中以往导入的课程。</span>';
   showImportResult(msg,validCnt===0);
 }
 function parseTimetable(rows){
@@ -2098,10 +1693,10 @@ function parseTimetable(rows){
   rows.slice(1).forEach(r=>{
     if(!r||!r.length||r.every(c=>!String(c==null?'':c).trim()))return;
     const wdRaw=cols.weekday>=0?String(r[cols.weekday]==null?'':r[cols.weekday]).trim():'';
-    if(wdRaw)curWeekday=wdRaw;   // 「星期」列为合并单元格，下面若干行沿用同一个星期
+    if(wdRaw)curWeekday=wdRaw;
     if(!curWeekday)return;
     const offset=WD_OFFSET[curWeekday];
-    if(offset==null)return;      // 非星期行（标题行、合计行等）直接忽略
+    if(offset==null)return;
     const weeksRaw=String(r[cols.weeks]==null?'':r[cols.weeks]).trim();
     const periodRaw=String(cols.period>=0&&r[cols.period]!=null?r[cols.period]:'').trim();
     const course=String(cols.course>=0&&r[cols.course]!=null?r[cols.course]:'').trim();
@@ -2109,7 +1704,6 @@ function parseTimetable(rows){
     const cls=String(cols.cls>=0&&r[cols.cls]!=null?r[cols.cls]:'').trim();
     const teacher=String(cols.teacher>=0&&r[cols.teacher]!=null?r[cols.teacher]:'').trim();
     const type=String(cols.type>=0&&r[cols.type]!=null?r[cols.type]:'').trim();
-    // 「节次」列写「单周 / 双周」时，真实节次写在该行「周次」列的方括号里
     let periodText=periodRaw;
     let oddEven='';
     if(periodRaw.indexOf('单周')>=0)oddEven='odd';
@@ -2130,7 +1724,6 @@ function parseTimetable(rows){
     if(type)descParts.push(type);
     const desc=descParts.join(' · ');
     if(!weeks.length||!range){
-      // 无法换算的课程行保留在预览中并标红，避免静默丢弃
       parsed.push({calendarId:'B',title:title,date:'',startTime:time.start,endTime:time.end,location:loc,
         repeat:'none',remindBefore:'15',description:desc,color:colorOfCourse(title),allDay:!time.start,
         _err:true,_week:'—',_wdOffset:offset,_timeLabel:timeLabel});
@@ -2153,7 +1746,6 @@ function showImportResult(msg,isErr){
   document.getElementById('importResult').innerHTML=`<div class="import-result ${isErr?'err':''}">${msg}</div>`;
 }
 async function confirmImport(){
-  if(!cbReady){toast('云数据库未连接，无法导入','error');return;}
   const valid=parsedImportRows.filter(p=>!p._err).map(p=>({
     id:genId(),calendarId:p.calendarId,title:p.title,date:p.date,
     startTime:p.startTime,endTime:p.endTime,allDay:p.allDay,location:p.location,
@@ -2162,29 +1754,253 @@ async function confirmImport(){
   }));
   if(!valid.length)return;
   try{
-    // 批量添加（逐条，数据量小时足够快）
-    for(const ev of valid){await cbDb.collection(EVENTS_COL).add(ev);}
+    await bulkInsertEventsCloud(valid);
     closeModal('modalImport');
-    toast(`成功导入 ${valid.length} 条日程`,'success');
-    await reloadAllFromCloud();render();
-  }catch(err){toast('导入失败：'+err.message,'error');}
+    render();
+    toast(`成功导入 ${valid.length} 条日程（已同步云端）`,'success');
+  }catch(err){
+    console.error(err);
+    toast('导入失败：'+(err.message||err),'error');
+  }
+}
+
+/* ============ 展示页美化 ============ */
+const TOPBAR_PRESETS = [
+  {label:'深空蓝（默认）', v:'linear-gradient(90deg,#0f2027,#203a43,#2c5364)'},
+  {label:'商务蓝',         v:'linear-gradient(90deg,#0052d9,#0069ff)'},
+  {label:'星夜紫',         v:'linear-gradient(90deg,#41295a,#2F0743)'},
+  {label:'森野绿',         v:'linear-gradient(90deg,#134e5e,#71b280)'},
+  {label:'蔷薇红',         v:'linear-gradient(90deg,#6a11cb,#fc5c7d)'},
+  {label:'墨黑极简',       v:'#1a1a1a'},
+];
+const PAGE_PRESETS = [
+  {label:'浅灰（默认）', v:'#f0f2f5'},
+  {label:'纯白',         v:'#ffffff'},
+  {label:'淡蓝渐变',     v:'linear-gradient(180deg,#eef4ff,#f7f9fc)'},
+  {label:'暖米色',       v:'#faf7f2'},
+];
+const DAY_DEFAULTS = [
+  {name:'周日', color:'#f59e0b'},
+  {name:'周一', color:'#2563eb'},
+  {name:'周二', color:'#ea580c'},
+  {name:'周三', color:'#16a34a'},
+  {name:'周四', color:'#7c3aed'},
+  {name:'周五', color:'#e11d48'},
+  {name:'周六', color:'#0284c7'},
+];
+const DISPLAY_DEFAULTS = {
+  siteTitle:'日历展示中心',
+  topbarBg:'linear-gradient(90deg,#0f2027,#203a43,#2c5364)',
+  pageBg:'#f0f2f5',
+  accentA:'#3b82f6',
+  accentB:'#e11d48',
+  radius:16,
+  loaderMs:1400,
+  showBigCalendar:true,
+  showCalA:true,
+  showCalB:true,
+  showTermBadge:true,
+  showBrandDot:true,
+  themes:[]
+};
+let tpTopbarVal = '';
+let tpBgVal = '';
+
+function openTheme(){
+  const t=loadDisplayTheme();
+  document.getElementById('tpTitle').value=t.siteTitle||DISPLAY_DEFAULTS.siteTitle;
+  tpTopbarVal=t.topbarBg||DISPLAY_DEFAULTS.topbarBg;
+  tpBgVal=t.pageBg||DISPLAY_DEFAULTS.pageBg;
+  document.getElementById('tpTopbarCustom').value=tpTopbarVal;
+  document.getElementById('tpBgCustom').value=tpBgVal;
+  renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
+  renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
+  document.getElementById('tpAccentA').value=/^#[0-9a-f]{6}$/i.test(t.accentA||'')?t.accentA:'#3b82f6';
+  document.getElementById('tpAccentB').value=/^#[0-9a-f]{6}$/i.test(t.accentB||'')?t.accentB:'#e11d48';
+  const r=(t.radius!=null?t.radius:16);
+  document.getElementById('tpRadius').value=r;
+  document.getElementById('tpRadiusVal').textContent=r+'px';
+  document.getElementById('tpLoader').value=String(t.loaderMs!=null?t.loaderMs:1400);
+  document.getElementById('tpShowBig').checked=t.showBigCalendar!==false;
+  document.getElementById('tpShowA').checked=t.showCalA!==false;
+  document.getElementById('tpShowB').checked=t.showCalB!==false;
+  document.getElementById('tpShowTerm').checked=t.showTermBadge!==false;
+  document.getElementById('tpShowBrandDot').checked=t.showBrandDot!==false;
+  renderDayThemeList(t.themes);
+  updateThemePreview();
+  document.getElementById('modalTheme').classList.add('show');
+}
+function renderSwatches(boxId,list,cur){
+  const box=document.getElementById(boxId);
+  if(!box)return;
+  box.innerHTML=list.map((p,i)=>
+    `<div class="tp-swatch ${p.v===cur?'sel':''}" style="background:${p.v}" title="${escapeHtml(p.label)}" onclick="pickSwatch('${boxId}',${i})"></div>`
+  ).join('');
+}
+function pickSwatch(boxId,i){
+  const isTop=boxId==='tpTopbarSwatches';
+  const list=isTop?TOPBAR_PRESETS:PAGE_PRESETS;
+  const v=list[i].v;
+  if(isTop){
+    tpTopbarVal=v;
+    document.getElementById('tpTopbarCustom').value=v;
+    renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,v);
+  }else{
+    tpBgVal=v;
+    document.getElementById('tpBgCustom').value=v;
+    renderSwatches('tpBgSwatches',PAGE_PRESETS,v);
+  }
+  updateThemePreview();
+}
+function onTopbarCustom(){
+  tpTopbarVal=document.getElementById('tpTopbarCustom').value.trim();
+  renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
+  updateThemePreview();
+}
+function onBgCustom(){
+  tpBgVal=document.getElementById('tpBgCustom').value.trim();
+  renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
+  updateThemePreview();
+}
+function onRadiusInput(){
+  const r=parseInt(document.getElementById('tpRadius').value,10)||0;
+  document.getElementById('tpRadiusVal').textContent=r+'px';
+  updateThemePreview();
+}
+function renderDayThemeList(themes){
+  const box=document.getElementById('tpThemeList');
+  if(!box)return;
+  box.innerHTML=DAY_DEFAULTS.map((d,i)=>{
+    const t=(themes&&themes[i])||{};
+    const color=/^#[0-9a-f]{6}$/i.test(t.color||'')?t.color:d.color;
+    const img=t.img||'';
+    return `<div class="tp-day-row">
+      <span class="dn">${d.name}</span>
+      <input type="color" class="tp-color-sm" data-i="${i}" data-k="color" value="${color}" oninput="updateThemePreview()">
+      <input class="form-input" data-i="${i}" data-k="img" value="${escapeHtml(img)}" placeholder="自定义插图 URL（留空使用内置插图）" oninput="updateThemePreview()">
+    </div>`;
+  }).join('');
+}
+function readDayThemes(){
+  const out=[];
+  for(let i=0;i<7;i++){
+    const cInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="color"]`);
+    const iInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="img"]`);
+    if(!cInp)continue;
+    const o={};
+    const color=(cInp.value||'').trim();
+    const img=(iInp&&iInp.value||'').trim();
+    if(color&&color.toLowerCase()!==DAY_DEFAULTS[i].color.toLowerCase())o.color=color;
+    if(img)o.img=img;
+    out[i]=Object.keys(o).length?o:null;
+  }
+  return out;
+}
+function readThemeForm(){
+  const r=parseInt(document.getElementById('tpRadius').value,10);
+  const lm=parseInt(document.getElementById('tpLoader').value,10);
+  return {
+    siteTitle:(document.getElementById('tpTitle').value||'').trim()||DISPLAY_DEFAULTS.siteTitle,
+    topbarBg:tpTopbarVal||DISPLAY_DEFAULTS.topbarBg,
+    pageBg:tpBgVal||DISPLAY_DEFAULTS.pageBg,
+    accentA:document.getElementById('tpAccentA').value||'#3b82f6',
+    accentB:document.getElementById('tpAccentB').value||'#e11d48',
+    radius:isNaN(r)?16:r,
+    loaderMs:isNaN(lm)?1400:lm,
+    showBigCalendar:document.getElementById('tpShowBig').checked,
+    showCalA:document.getElementById('tpShowA').checked,
+    showCalB:document.getElementById('tpShowB').checked,
+    showTermBadge:document.getElementById('tpShowTerm').checked,
+    showBrandDot:document.getElementById('tpShowBrandDot').checked,
+    themes:readDayThemes(),
+    updatedAt:Date.now()
+  };
+}
+function updateThemePreview(){
+  const t=readThemeForm();
+  const tb=document.getElementById('pvTopbar');
+  if(tb)tb.style.background=t.topbarBg;
+  const ti=document.getElementById('pvTitle');
+  if(ti)ti.textContent=t.siteTitle;
+  const dot=document.getElementById('pvDot');
+  if(dot)dot.style.display=t.showBrandDot?'':'none';
+  const body=document.getElementById('pvBody');
+  if(body)body.style.background=t.pageBg;
+  const today=document.getElementById('pvToday');
+  if(today){
+    today.style.background=t.accentA;
+    today.style.color='#fff';
+    today.style.borderRadius=Math.min(t.radius,12)+'px';
+  }
+  const card=document.getElementById('pvCard');
+  if(card)card.style.borderRadius=Math.min(t.radius,14)+'px';
+  const bar=document.getElementById('pvBar');
+  if(bar)bar.style.background=t.accentB;
+}
+async function saveTheme(){
+  const t=readThemeForm();
+  try{
+    await saveSettingCloud('display_theme', t);
+    closeModal('modalTheme');
+    toast('展示页美化已保存并同步云端','success');
+  }catch(err){
+    console.error(err);
+    toast('保存失败：'+(err.message||err),'error');
+  }
+}
+function resetThemeForm(){
+  document.getElementById('tpTitle').value=DISPLAY_DEFAULTS.siteTitle;
+  tpTopbarVal=DISPLAY_DEFAULTS.topbarBg;
+  tpBgVal=DISPLAY_DEFAULTS.pageBg;
+  document.getElementById('tpTopbarCustom').value=tpTopbarVal;
+  document.getElementById('tpBgCustom').value=tpBgVal;
+  renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
+  renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
+  document.getElementById('tpAccentA').value=DISPLAY_DEFAULTS.accentA;
+  document.getElementById('tpAccentB').value=DISPLAY_DEFAULTS.accentB;
+  document.getElementById('tpRadius').value=DISPLAY_DEFAULTS.radius;
+  document.getElementById('tpRadiusVal').textContent=DISPLAY_DEFAULTS.radius+'px';
+  document.getElementById('tpLoader').value=String(DISPLAY_DEFAULTS.loaderMs);
+  document.getElementById('tpShowBig').checked=true;
+  document.getElementById('tpShowA').checked=true;
+  document.getElementById('tpShowB').checked=true;
+  document.getElementById('tpShowTerm').checked=true;
+  document.getElementById('tpShowBrandDot').checked=true;
+  renderDayThemeList([]);
+  updateThemePreview();
+  toast('已恢复默认外观，点击「保存并应用」生效','info');
 }
 
 /* ============ Toast ============ */
 function toast(msg,type='info'){
   const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
   document.getElementById('toastContainer').appendChild(t);
-  setTimeout(()=>{t.style.opacity=0;t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2200);
+  setTimeout(()=>{t.style.opacity=0;t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2600);
 }
 
-/* ============ 初始化 ============ */
-setupDrop();
-renderColorPicker();
-document.getElementById('evDate').value=formatDate(new Date());
-// 云环境就绪前先显示一个"加载中"占位
-render();
-// 启动云数据库连接
-initCloudBase();
+/* ============ 启动 ============ */
+(async function boot(){
+  initCloud();
+  updateSyncBadge();
+  try{
+    await refreshAllFromCloud();
+  }catch(err){
+    console.error('初始化拉取失败：', err);
+    toast('云端读取失败，已切换到本地缓存','error');
+  }
+  setupDrop();
+  renderColorPicker();
+  render();
+  document.getElementById('evDate').value=formatDate(new Date());
+
+  window.addEventListener('focus', async ()=>{
+    try{ await refreshAllFromCloud(); }catch(e){}
+  });
+  setInterval(async ()=>{
+    if(document.visibilityState!=='visible')return;
+    try{ await refreshAllFromCloud(); }catch(e){}
+  }, 300000);
+})();
 </script>
 </body>
 </html>
