@@ -6,7 +6,7 @@
 <meta name="description" content="日历展示平台：大日历视图、商务日程与主题日历同屏展示，实时时钟与星期主题切换">
 <meta name="theme-color" content="#0f2027">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%85%3C/text%3E%3C/svg%3E">
-<title>日历展示平台</title>
+<title>千鸟学院工作日历</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -303,7 +303,7 @@ body.show-404 #page404{display:flex;}
 <div class="dual-panel" id="dualPanel">
   <div class="calendar-a" id="calA">
     <div class="cal-a-header">
-      <div class="cal-a-title">📅 日历A <span class="tag">商务日程</span></div>
+      <div class="cal-a-title">📅 日历A <span class="tag">政务日程</span></div>
     </div>
     <div class="cal-a-date" id="calADateHead"></div>
     <div class="cal-a-summary" id="calASummary"></div>
@@ -322,7 +322,7 @@ body.show-404 #page404{display:flex;}
     <div class="cal-b-detailcol">
       <div class="cal-b-dhead">
         <div class="cal-b-dtop">
-          <div class="cal-b-dtitle">🎨 日历B <span class="tag">主题日历</span></div>
+          <div class="cal-b-dtitle">🎨 日历B <span class="tag">教务日历</span></div>
           <span class="cal-b-dcount" id="calBEventCount"></span>
         </div>
         <div class="cal-b-dbig">
@@ -340,7 +340,7 @@ body.show-404 #page404{display:flex;}
     <div class="dm-header">
       <div class="dm-cal-tag" id="dmCalTag">A</div>
       <div class="dm-title-wrap">
-        <div class="dm-cal-name" id="dmCalName">日历A · 商务日程</div>
+        <div class="dm-cal-name" id="dmCalName">日历A · 政务日程</div>
         <div class="dm-title" id="dmTitle">日程标题</div>
       </div>
       <button class="dm-close" type="button" aria-label="关闭" onclick="closeEventDetail()">×</button>
@@ -765,13 +765,13 @@ function renderCalA(){
   document.getElementById('calASummary').innerHTML=`
     <div class="icon">📅</div>
     <div class="info">
-      <div class="label">商务日程安排</div>
+      <div class="label">政务日程安排</div>
       <div class="count">${evs.length} 项</div>
     </div>
     <div style="font-size:36px;opacity:.3;">${evs.length?'📋':'📭'}</div>`;
   const box=document.getElementById('calAEvents');
   if(!evs.length){
-    box.innerHTML=`<div class="no-events"><div class="big">📭</div><div>今日暂无商务日程</div></div>`;
+    box.innerHTML=`<div class="no-events"><div class="big">📭</div><div>今日暂无政务日程</div></div>`;
     return;
   }
   box.innerHTML=evs.map(e=>{
@@ -874,7 +874,7 @@ function openEventDetail(id, dateStr){
   calTag.textContent=isA?'A':'B';
   calTag.style.background=accentColor;
 
-  document.getElementById('dmCalName').textContent=isA?'日历A · 商务日程':'日历B · 主题日历';
+  document.getElementById('dmCalName').textContent=isA?'日历A · 政务日程':'日历B · 教务日历';
   document.getElementById('dmTitle').textContent=ev.title||'未命名日程';
 
   const showDate=dateStr||ev.date||'';
