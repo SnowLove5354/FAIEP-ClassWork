@@ -197,10 +197,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .tp-color{width:100%;height:38px;border:1px solid #e5e6eb;border-radius:8px;padding:3px;background:#fff;cursor:pointer;}
 .tp-checks{display:flex;flex-wrap:wrap;gap:10px 20px;}
 .tp-checks label{display:flex;align-items:center;gap:6px;font-size:13px;color:#4e5969;cursor:pointer;}
-.tp-day-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.tp-day-row .dn{font-size:12px;font-weight:600;color:#4e5969;width:36px;flex-shrink:0;}
-.tp-day-row .tp-color-sm{width:38px;height:32px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
-.tp-day-row .form-input{padding:6px 10px;font-size:12px;flex:1;min-width:0;}
 .tp-hint{font-size:12px;color:#8a9099;line-height:1.7;margin-top:6px;}
 .loader-preview{position:relative;border-radius:12px;padding:36px 20px;text-align:center;color:#fff;margin-bottom:14px;overflow:hidden;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3c72,#2a5298,#7e57c2);background-size:cover;background-position:center;}
 .loader-preview > *{position:relative;z-index:1;}
@@ -238,6 +234,20 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .lp-text{font-size:16px;font-weight:300;letter-spacing:4px;margin-top:4px;}
 .lp-sub{font-size:12px;opacity:.6;letter-spacing:2px;margin-top:6px;}
 .lp-none{font-size:13px;opacity:.7;}
+/* ✅ 修复1：通用 .tp-color-sm，主题色选择器（位于 .tp-day-title 内）也能正确显示 */
+.tp-color-sm{width:34px;height:30px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
+.tp-day-card{background:#fff;border:1px solid #e5e6eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.tp-day-card:last-child{margin-bottom:0;}
+.tp-day-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.tp-day-name{font-weight:700;font-size:13px;color:#1f2329;min-width:34px;}
+.tp-day-meta{font-size:12px;color:#8a9099;margin-left:auto;}
+.tp-day-field{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.tp-day-field:last-child{margin-bottom:0;}
+.tp-day-label{font-size:12px;color:#4e5969;min-width:56px;flex-shrink:0;}
+.tp-day-field .form-input{flex:1;padding:6px 10px;font-size:12px;min-width:0;}
+.tp-day-field .tp-color-sm{width:34px;height:30px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
+.tp-mini-btn{flex-shrink:0;padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid #e5e6eb;background:#fff;cursor:pointer;color:#4e5969;font-family:inherit;transition:.15s;}
+.tp-mini-btn:hover{background:#f3f4f6;color:#1f2329;}
 .p404-preview{position:relative;border-radius:12px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:14px;overflow:hidden;background:linear-gradient(135deg,#0f2027,#2c5364);background-size:cover;background-position:center;}
 .p404-preview::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.15),transparent 45%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.1),transparent 45%);pointer-events:none;}
 .p404-preview > *{position:relative;}
@@ -261,7 +271,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
   .event-list-header{display:none;}
   .event-row{grid-template-columns:1fr;gap:6px;padding:14px 16px;}
   .form-row{grid-template-columns:1fr;}
-  .tp-day-row{flex-wrap:wrap;}
+  .tp-day-field{flex-wrap:wrap;}
   .sync-badge{display:none;}
 }
 </style>
@@ -510,7 +520,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
       <div class="tp-sec">
         <div class="tp-sec-title">日历B · 七天主题</div>
         <div id="tpThemeList"></div>
-        <div class="tp-hint">插图 URL 留空表示使用内置插图；建议填写 9:16 竖版图片地址。</div>
+        <div class="tp-hint">每天可配置「主题色」「插图」「插图周围背景」三项。插图留空使用内置图；周围背景留空使用内置渐变，也支持 linear-gradient(...) 或 #rrggbb。</div>
       </div>
 
     </div>
@@ -564,7 +574,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
         <div class="form-group" style="margin-top:12px;">
           <label class="form-label">自定义 CSS 背景 <span style="color:#8a9099;font-weight:400;">（可选，优先级最高）</span></label>
           <input class="form-input" id="p404BgCss" placeholder="支持 linear-gradient(...)、url(...)、#rrggbb 等。留空则使用上方主题" oninput="update404Preview()">
-          <div class="tp-hint">例如：<code style="background:#f0f1f3;padding:1px 5px;border-radius:4px;">url(https://picsum.photos/1920/1080)</code> 或 <code style="background:#f0f1f3;padding:1px 5px;border-radius:4px;">linear-gradient(135deg,#1a2a6c,#b21f1f)</code></div>
         </div>
       </div>
 
@@ -1442,6 +1451,15 @@ const DAY_DEFAULTS=[
   {name:'周日',color:'#f59e0b'},{name:'周一',color:'#2563eb'},{name:'周二',color:'#ea580c'},
   {name:'周三',color:'#16a34a'},{name:'周四',color:'#7c3aed'},{name:'周五',color:'#e11d48'},{name:'周六',color:'#0284c7'},
 ];
+const BUILTIN_IMGS = [
+  'https://gips1.baidu.com/it/u=3426953913,2602936109&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips3.baidu.com/it/u=187311376,3321382880&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips2.baidu.com/it/u=222082125,885693681&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips1.baidu.com/it/u=3063342635,2708302195&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips0.baidu.com/it/u=4008482774,3350441090&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips0.baidu.com/it/u=596943118,1642531063&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+  'https://gips2.baidu.com/it/u=879315578,1992116744&fm=3086&app=3086&f=JPEG&wm=1,baiduai3,0,0,13,9&wmo=5,5?w=720&h=1280',
+];
 const LOADER_BG_PRESETS=[
   {label:'深空蓝（默认）',bg:'linear-gradient(135deg,#1e3c72 0%,#2a5298 50%,#7e57c2 100%)'},
   {label:'星夜',bg:'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'},
@@ -1544,13 +1562,34 @@ function updateLoaderPreview(){
   if(sub)html+=`<div class="lp-sub">${escapeHtml(sub)}</div>`;
   inner.innerHTML=html;
 }
+/* ✅ 修复2+3：resetBg 同步重置取色器；colorPickerVal 支持 3 位 hex */
 function renderDayThemeList(themes){
-  const box=document.getElementById('tpThemeList');if(!box)return;
+  const box=document.getElementById('tpThemeList');
+  if(!box)return;
   box.innerHTML=DAY_DEFAULTS.map((d,i)=>{
     const t=(themes&&themes[i])||{};
-    const color=/^#[0-9a-f]{6}$/i.test(t.color||'')?t.color:d.color;
-    const img=t.img||'';
-    return `<div class="tp-day-row"><span class="dn">${d.name}</span><input type="color" class="tp-color-sm" data-i="${i}" data-k="color" value="${color}" oninput="updateThemePreview()"><input class="form-input" data-i="${i}" data-k="img" value="${escapeHtml(img)}" placeholder="自定义插图 URL" oninput="updateThemePreview()"></div>`;
+    const color=/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(t.color||'')?t.color:d.color;
+    const img=t.img||BUILTIN_IMGS[i];
+    const picBg=t.picBg||'';
+    const colorPickerVal=/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(picBg)?picBg:d.color;
+    return `<div class="tp-day-card">
+      <div class="tp-day-title">
+        <span class="tp-day-name">${d.name}</span>
+        <input type="color" class="tp-color-sm" data-i="${i}" data-k="color" value="${color}" oninput="updateThemePreview()" title="主题色">
+        <span class="tp-day-meta">主题色</span>
+      </div>
+      <div class="tp-day-field">
+        <span class="tp-day-label">插图</span>
+        <input class="form-input" data-i="${i}" data-k="img" value="${escapeHtml(img)}" placeholder="留空使用内置插图" oninput="updateThemePreview()">
+        <button type="button" class="tp-mini-btn" onclick="resetImg(${i})" title="恢复为内置插图">内置</button>
+      </div>
+      <div class="tp-day-field">
+        <span class="tp-day-label">周围背景</span>
+        <input type="color" class="tp-color-sm" data-i="${i}" data-k="picBgColor" value="${colorPickerVal}" oninput="onPicBgColor(${i})" title="纯色快捷">
+        <input class="form-input" data-i="${i}" data-k="picBg" value="${escapeHtml(picBg)}" placeholder="留空=默认渐变，或填 linear-gradient(...)" oninput="updateThemePreview()">
+        <button type="button" class="tp-mini-btn" onclick="resetBg(${i})" title="恢复为内置渐变">默认</button>
+      </div>
+    </div>`;
   }).join('');
 }
 function readDayThemes(){
@@ -1558,15 +1597,35 @@ function readDayThemes(){
   for(let i=0;i<7;i++){
     const cInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="color"]`);
     const iInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="img"]`);
+    const bgInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBg"]`);
     if(!cInp)continue;
     const o={};
     const color=(cInp.value||'').trim();
     const img=(iInp&&iInp.value||'').trim();
+    const picBg=(bgInp&&bgInp.value||'').trim();
     if(color&&color.toLowerCase()!==DAY_DEFAULTS[i].color.toLowerCase())o.color=color;
-    if(img)o.img=img;
+    if(img&&img!==BUILTIN_IMGS[i])o.img=img;
+    if(picBg)o.picBg=picBg;
     out[i]=Object.keys(o).length?o:null;
   }
   return out;
+}
+function onPicBgColor(i){
+  const colorInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBgColor"]`);
+  const bgInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBg"]`);
+  if(colorInp&&bgInp){bgInp.value=colorInp.value;updateThemePreview();}
+}
+function resetImg(i){
+  const inp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="img"]`);
+  if(inp){inp.value=BUILTIN_IMGS[i];updateThemePreview();}
+}
+/* ✅ 修复2：resetBg 同时重置文本和取色器 */
+function resetBg(i){
+  const inp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBg"]`);
+  const cInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBgColor"]`);
+  if(inp)inp.value='';
+  if(cInp)cInp.value=DAY_DEFAULTS[i].color;
+  updateThemePreview();
 }
 function readThemeForm(){
   const r=parseInt(document.getElementById('tpRadius').value,10);
