@@ -281,8 +281,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
     <div class="cal-group">
       <div class="group-title">我的日历</div>
       <div class="cal-switch active" data-cal="all" onclick="setFilter('all')"><span class="cb-dot" style="background:linear-gradient(90deg,#3b82f6,#e11d48);"></span><span class="cb-label">全部日历</span><span class="cb-count" id="cntAll">0</span></div>
-      <div class="cal-switch" data-cal="A" onclick="setFilter('A')"><span class="cb-dot" style="background:#3b82f6;"></span><span class="cb-label">📅 日历A · 商务日程</span><span class="cb-count" id="cntA">0</span></div>
-      <div class="cal-switch" data-cal="B" onclick="setFilter('B')"><span class="cb-dot" style="background:#e11d48;"></span><span class="cb-label">🎨 日历B · 主题日历</span><span class="cb-count" id="cntB">0</span></div>
+      <div class="cal-switch" data-cal="A" onclick="setFilter('A')"><span class="cb-dot" style="background:#3b82f6;"></span><span class="cb-label">📅 日历A · 政务日程</span><span class="cb-count" id="cntA">0</span></div>
+      <div class="cal-switch" data-cal="B" onclick="setFilter('B')"><span class="cb-dot" style="background:#e11d48;"></span><span class="cb-label">🎨 日历B · 教学日历</span><span class="cb-count" id="cntB">0</span></div>
     </div>
     <div class="sidebar-actions">
       <button class="btn-primary" onclick="openCreate()">＋ 创建日程</button>
@@ -317,8 +317,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
 
     <div class="stats">
       <div class="stat-card blue"><div class="label">日程总数</div><div class="value" id="statTotal">0</div><div class="trend" id="statTodayText">今日 0 项</div></div>
-      <div class="stat-card purple"><div class="label">日历A 商务日程</div><div class="value" id="statA">0</div><div class="trend">商务蓝 · 单色</div></div>
-      <div class="stat-card green"><div class="label">日历B 主题日历</div><div class="value" id="statB">0</div><div class="trend">彩色主题</div></div>
+      <div class="stat-card purple"><div class="label">日历A 政务日程</div><div class="value" id="statA">0</div><div class="trend">商务蓝 · 单色</div></div>
+      <div class="stat-card green"><div class="label">日历B 教学日历</div><div class="value" id="statB">0</div><div class="trend">彩色主题</div></div>
     </div>
 
     <div class="event-list">
@@ -337,8 +337,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
       <div class="form-group">
         <label class="form-label">归属日历<span class="req">*</span></label>
         <div class="calendar-picker">
-          <div class="cal-option selected" data-cal="A" onclick="selectCal('A')"><div class="cal-icon">📅</div><div class="cal-name">日历A</div><div class="cal-desc">商务日程 · 蓝色</div></div>
-          <div class="cal-option" data-cal="B" onclick="selectCal('B')"><div class="cal-icon">🎨</div><div class="cal-name">日历B</div><div class="cal-desc">主题日历 · 彩色</div></div>
+          <div class="cal-option selected" data-cal="A" onclick="selectCal('A')"><div class="cal-icon">📅</div><div class="cal-name">日历A</div><div class="cal-desc">政务日程 · 蓝色</div></div>
+          <div class="cal-option" data-cal="B" onclick="selectCal('B')"><div class="cal-icon">🎨</div><div class="cal-name">日历B</div><div class="cal-desc">教学日历 · 彩色</div></div>
         </div>
       </div>
       <div class="form-group"><label class="form-label">日程标题<span class="req">*</span></label><input class="form-input" id="evTitle" placeholder="请输入日程标题，例如：周会、项目评审"></div>
@@ -500,8 +500,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
         <div class="tp-sec-title">模块显示</div>
         <div class="tp-checks">
           <label><input type="checkbox" id="tpShowBig" checked onchange="updateThemePreview()"> 大日历视图</label>
-          <label><input type="checkbox" id="tpShowA" checked onchange="updateThemePreview()"> 日历A 商务日程</label>
-          <label><input type="checkbox" id="tpShowB" checked onchange="updateThemePreview()"> 日历B 主题日历</label>
+          <label><input type="checkbox" id="tpShowA" checked onchange="updateThemePreview()"> 日历A 政务日程</label>
+          <label><input type="checkbox" id="tpShowB" checked onchange="updateThemePreview()"> 日历B 教学日历</label>
           <label><input type="checkbox" id="tpShowTerm" checked onchange="updateThemePreview()"> 教学周徽章</label>
           <label><input type="checkbox" id="tpShowBrandDot" checked onchange="updateThemePreview()"> 顶栏呼吸灯</label>
         </div>
@@ -989,7 +989,7 @@ function renderColorPicker(){
   const colors=selCalInForm==='A'?COLORS_A:COLORS_B;
   const box=document.getElementById('colorPicker');
   let html=colors.map(c=>`<div class="color-dot ${c===selColor?'sel':''}" style="background:${c};color:${c};" onclick="pickColor('${c}')"></div>`).join('');
-  html+=selCalInForm==='A'?'<span class="color-tip">商务日程使用统一的商务蓝色</span>':'<span class="color-tip">主题日历可选多种彩色</span>';
+  html+=selCalInForm==='A'?'<span class="color-tip">政务日程使用统一的商务蓝色</span>':'<span class="color-tip">教学日历可选多种彩色</span>';
   box.innerHTML=html;
 }
 function pickColor(c){selColor=c;renderColorPicker();}
