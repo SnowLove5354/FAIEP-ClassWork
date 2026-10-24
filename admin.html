@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%93%86%3C/text%3E%3C/svg%3E">
 <title>日历管理平台</title>
-<meta name="description" content="日历管理平台：创建、编辑、删除日程，支持日历A/日历B归属管理与表格批量导入">
 <meta name="theme-color" content="#0052d9">
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -13,7 +12,6 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6fa;color:#1f2329;}
 body{display:flex;flex-direction:column;min-height:100vh;}
-
 .admin-header{background:linear-gradient(90deg,#0052d9,#0069ff);color:#fff;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,82,217,.18);}
 .admin-header .logo{font-size:18px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:10px;}
 .admin-header .logo i{font-style:normal;background:rgba(255,255,255,.2);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;}
@@ -24,7 +22,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .sync-badge.offline .sd{background:#f87171;}
 .admin-header .links a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid rgba(255,255,255,.3);border-radius:20px;transition:.2s;}
 .admin-header .links a:hover{background:rgba(255,255,255,.15);color:#fff;}
-
 .admin-body{flex:1;display:grid;grid-template-columns:280px 1fr;max-width:1600px;width:100%;margin:0 auto;}
 .sidebar{background:#fff;border-right:1px solid #e7e8eb;padding:20px 0;}
 .sidebar .cal-group{padding:0 18px;}
@@ -36,7 +33,6 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .cal-switch .cb-label{flex:1;}
 .cal-switch .cb-count{font-size:12px;background:#f0f1f3;color:#8a9099;padding:2px 8px;border-radius:10px;}
 .cal-switch.active .cb-count{background:#0052d9;color:#fff;}
-
 .sidebar-actions{padding:18px;border-top:1px solid #f0f1f3;margin-top:10px;}
 .sidebar-actions button{width:100%;padding:11px;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:8px;font-weight:500;transition:.2s;}
 .btn-primary{background:#0052d9;color:#fff;}
@@ -45,14 +41,11 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .btn-secondary:hover{background:#e5e7eb;}
 .btn-danger-outline{background:#fff;color:#e34d59;border:1px solid #fecdd0;}
 .btn-danger-outline:hover{background:#fff1f0;}
-
 .content{padding:24px;overflow-y:auto;}
 .content-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
 .content-title{font-size:22px;font-weight:700;}
 .content-title .sub{font-size:13px;color:#8a9099;font-weight:400;margin-left:10px;}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;}
-.toolbar button{padding:9px 18px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:.2s;display:flex;align-items:center;gap:6px;}
-
+.toolbar button{padding:9px 18px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:.2s;}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px;}
 .stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .stat-card .label{font-size:12px;color:#8a9099;margin-bottom:8px;}
@@ -61,57 +54,46 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .stat-card.blue .value{color:#0052d9;}
 .stat-card.purple .value{color:#722ed1;}
 .stat-card.green .value{color:#13c2c2;}
-
 .filter-bar{background:#fff;border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.filter-row{display:grid;grid-template-columns:2fr 1.2fr 120px 120px auto;gap:12px;align-items:center;flex-wrap:wrap;}
+.filter-row{display:grid;grid-template-columns:2fr 1.2fr 120px 120px auto;gap:12px;align-items:center;}
 .filter-search{position:relative;}
 .filter-search .fs-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8a9099;font-size:14px;}
-.filter-search input{width:100%;padding:8px 12px 8px 34px;border:1px solid #e5e6eb;border-radius:8px;font-size:13px;outline:none;transition:.2s;background:#f9fafb;}
+.filter-search input{width:100%;padding:8px 12px 8px 34px;border:1px solid #e5e6eb;border-radius:8px;font-size:13px;outline:none;background:#f9fafb;}
 .filter-search input:focus{border-color:#0052d9;background:#fff;box-shadow:0 0 0 3px rgba(0,82,217,.1);}
 .filter-date-range{display:flex;align-items:center;gap:6px;}
-.filter-date-range input{flex:1;padding:8px 10px;border:1px solid #e5e6eb;border-radius:8px;font-size:12px;outline:none;background:#f9fafb;font-family:inherit;color:#1f2329;transition:.2s;}
+.filter-date-range input{flex:1;padding:8px 10px;border:1px solid #e5e6eb;border-radius:8px;font-size:12px;outline:none;background:#f9fafb;font-family:inherit;color:#1f2329;}
 .filter-date-range input:focus{border-color:#0052d9;background:#fff;}
-.filter-date-range .dr-sep{color:#8a9099;font-size:12px;flex-shrink:0;}
-.filter-select{padding:8px 10px;border:1px solid #e5e6eb;border-radius:8px;font-size:13px;outline:none;background:#f9fafb;color:#1f2329;cursor:pointer;transition:.2s;font-family:inherit;}
+.filter-date-range .dr-sep{color:#8a9099;font-size:12px;}
+.filter-select{padding:8px 10px;border:1px solid #e5e6eb;border-radius:8px;font-size:13px;outline:none;background:#f9fafb;color:#1f2329;cursor:pointer;font-family:inherit;}
 .filter-select:focus{border-color:#0052d9;background:#fff;}
 .filter-summary{display:flex;align-items:center;gap:10px;font-size:12px;color:#8a9099;white-space:nowrap;}
 .filter-summary .filter-count{color:#0052d9;font-weight:700;font-size:14px;}
-.filter-reset{padding:8px 16px;border:1px solid #e5e6eb;border-radius:8px;background:#fff;color:#4e5969;font-size:13px;cursor:pointer;transition:.2s;font-family:inherit;}
-.filter-reset:hover{background:#f3f4f6;border-color:#c9cdd4;color:#1f2329;}
+.filter-reset{padding:8px 16px;border:1px solid #e5e6eb;border-radius:8px;background:#fff;color:#4e5969;font-size:13px;cursor:pointer;font-family:inherit;}
+.filter-reset:hover{background:#f3f4f6;color:#1f2329;}
 .filter-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#e8f0fe;color:#0052d9;border-radius:10px;font-size:11px;margin:0 2px;}
 .filter-chip .cx{cursor:pointer;font-weight:700;margin-left:2px;opacity:.6;}
-.filter-chip .cx:hover{opacity:1;}
 .filter-chips{margin-top:10px;padding-top:10px;border-top:1px dashed #f0f1f3;display:none;align-items:center;flex-wrap:wrap;gap:4px;font-size:12px;color:#8a9099;}
 .filter-chips.show{display:flex;}
-
-@media (max-width:980px){
-  .filter-row{grid-template-columns:1fr 1fr;}
-  .filter-search{grid-column:1 / -1;}
-  .filter-summary{grid-column:1 / -1;justify-content:flex-end;}
-}
-
+@media (max-width:980px){.filter-row{grid-template-columns:1fr 1fr;}.filter-search{grid-column:1 / -1;}.filter-summary{grid-column:1 / -1;justify-content:flex-end;}}
 .pagination{background:#fff;border-radius:0 0 12px 12px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-top:-2px;border-top:1px solid #f7f8fa;flex-wrap:wrap;}
 .page-info{font-size:13px;color:#4e5969;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.page-info .page-total{color:#8a9099;font-size:12px;}
-.page-size-select{padding:5px 8px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;background:#f9fafb;color:#1f2329;cursor:pointer;outline:none;font-family:inherit;}
-.page-size-select:focus{border-color:#0052d9;background:#fff;}
+.page-size-select{padding:5px 8px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;background:#f9fafb;color:#1f2329;cursor:pointer;font-family:inherit;}
 .page-nav{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.page-btn{min-width:32px;height:32px;padding:0 8px;border:1px solid #e5e6eb;border-radius:6px;background:#fff;color:#4e5969;font-size:13px;cursor:pointer;transition:.15s;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
-.page-btn:hover:not(:disabled):not(.active){background:#f3f4f6;border-color:#c9cdd4;color:#1f2329;}
+.page-btn{min-width:32px;height:32px;padding:0 8px;border:1px solid #e5e6eb;border-radius:6px;background:#fff;color:#4e5969;font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.page-btn:hover:not(:disabled):not(.active){background:#f3f4f6;color:#1f2329;}
 .page-btn.active{background:#0052d9;border-color:#0052d9;color:#fff;font-weight:600;}
 .page-btn:disabled{opacity:.4;cursor:not-allowed;}
-.page-ellipsis{color:#8a9099;padding:0 4px;user-select:none;}
+.page-ellipsis{color:#8a9099;padding:0 4px;}
 .page-jump{display:flex;align-items:center;gap:4px;font-size:12px;color:#8a9099;margin-left:8px;}
 .page-jump input{width:46px;padding:5px 6px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;outline:none;text-align:center;background:#f9fafb;color:#1f2329;font-family:inherit;}
-.page-jump input:focus{border-color:#0052d9;background:#fff;}
-
 .event-list{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.event-list-header{display:grid;grid-template-columns:100px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;background:#fafbfc;border-bottom:1px solid #f0f1f3;font-size:12px;color:#8a9099;font-weight:600;letter-spacing:.5px;}
-.event-row{display:grid;grid-template-columns:100px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;align-items:center;border-bottom:1px solid #f7f8fa;transition:.15s;font-size:14px;}
+.event-list-header{display:grid;grid-template-columns:130px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;background:#fafbfc;border-bottom:1px solid #f0f1f3;font-size:12px;color:#8a9099;font-weight:600;letter-spacing:.5px;}
+.event-row{display:grid;grid-template-columns:130px 1fr 120px 140px 120px 80px;gap:12px;padding:14px 20px;align-items:center;border-bottom:1px solid #f7f8fa;font-size:14px;}
 .event-row:hover{background:#fafbff;}
 .event-row:last-child{border-bottom:none;}
 .er-date{font-weight:600;color:#1f2329;}
 .er-date .w{font-size:11px;color:#8a9099;font-weight:400;display:block;margin-top:2px;}
+.er-date .range{color:#0052d9;font-weight:500;font-size:11px;margin-left:4px;}
 .er-title{display:flex;align-items:center;gap:8px;min-width:0;}
 .er-title .cal-tag{font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;flex-shrink:0;}
 .er-title .tname{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -120,35 +102,30 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .er-loc{color:#4e5969;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .er-repeat{font-size:12px;color:#4e5969;}
 .er-actions{display:flex;gap:4px;justify-content:flex-end;}
-.er-actions button{border:none;background:transparent;cursor:pointer;width:28px;height:28px;border-radius:6px;transition:.15s;font-size:14px;}
+.er-actions button{border:none;background:transparent;cursor:pointer;width:28px;height:28px;border-radius:6px;font-size:14px;}
 .er-actions .del:hover{background:#fff1f0;color:#e34d59;}
 .er-actions .edit:hover{background:#e8f0fe;color:#0052d9;}
 .empty-state{padding:60px 20px;text-align:center;color:#8a9099;}
 .empty-state .big{font-size:48px;margin-bottom:10px;}
-
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-mask.show{display:flex;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal{background:#fff;border-radius:14px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
-@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.25);}
 .modal-header{padding:18px 22px;border-bottom:1px solid #f0f1f3;display:flex;justify-content:space-between;align-items:center;}
 .modal-header h3{font-size:17px;font-weight:700;}
 .modal-close{border:none;background:transparent;font-size:22px;cursor:pointer;color:#8a9099;width:30px;height:30px;border-radius:6px;}
 .modal-close:hover{background:#f3f4f6;color:#333;}
 .modal-body{padding:20px 22px;}
 .modal-footer{padding:14px 22px;border-top:1px solid #f0f1f3;display:flex;justify-content:flex-end;gap:10px;}
-.modal-footer button{padding:9px 22px;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500;transition:.2s;}
-
+.modal-footer button{padding:9px 22px;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500;}
 .form-group{margin-bottom:16px;}
 .form-label{display:block;font-size:13px;color:#4e5969;margin-bottom:6px;font-weight:500;}
 .form-label .req{color:#e34d59;margin-left:2px;}
-.form-input,.form-select{width:100%;padding:10px 12px;border:1px solid #e5e6eb;border-radius:8px;font-size:14px;font-family:inherit;transition:.2s;background:#fff;}
+.form-input,.form-select{width:100%;padding:10px 12px;border:1px solid #e5e6eb;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
 .form-input:focus,.form-select:focus{outline:none;border-color:#0052d9;box-shadow:0 0 0 3px rgba(0,82,217,.12);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-
 .calendar-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.cal-option{padding:12px;border:2px solid #e5e6eb;border-radius:10px;cursor:pointer;text-align:center;transition:.2s;}
+.cal-option{padding:12px;border:2px solid #e5e6eb;border-radius:10px;cursor:pointer;text-align:center;}
 .cal-option:hover{border-color:#b9c9ff;}
 .cal-option.selected{border-color:#0052d9;background:#e8f0fe;}
 .cal-option .cal-icon{font-size:24px;margin-bottom:4px;}
@@ -156,16 +133,12 @@ body{display:flex;flex-direction:column;min-height:100vh;}
 .cal-option .cal-desc{font-size:12px;color:#8a9099;margin-top:2px;}
 .all-day-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#4e5969;cursor:pointer;}
 textarea.form-input{resize:vertical;min-height:70px;}
-
 .color-picker{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s;}
-.color-dot:hover{transform:scale(1.1);}
+.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;}
 .color-dot.sel{border-color:#1f2329;box-shadow:0 0 0 2px #fff,0 0 0 4px currentColor;}
 .color-tip{font-size:12px;color:#8a9099;margin-left:6px;}
-
-.custom-repeat-panel{margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;display:none;animation:slideDown .25s ease;}
+.custom-repeat-panel{margin-top:10px;padding:12px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;display:none;}
 .custom-repeat-panel.show{display:block;}
-@keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
 .custom-repeat-panel .cr-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#4e5969;}
 .custom-repeat-panel .cr-row + .cr-row{margin-top:10px;}
 .custom-repeat-panel .cr-row label{font-weight:500;min-width:70px;}
@@ -174,17 +147,15 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .custom-repeat-panel input[type=date]{padding:7px 10px;border:1px solid #e5e6eb;border-radius:6px;font-size:13px;}
 .cr-end-opts{display:flex;gap:14px;font-size:13px;flex-wrap:wrap;}
 .cr-end-opts label{display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:400;min-width:auto;}
-
-.import-drop{border:2px dashed #d9d9d9;border-radius:12px;padding:32px 20px;text-align:center;transition:.2s;cursor:pointer;background:#fafbfc;}
+.import-drop{border:2px dashed #d9d9d9;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;background:#fafbfc;}
 .import-drop.drag{border-color:#0052d9;background:#e8f0fe;}
 .import-drop .icon{font-size:42px;margin-bottom:8px;}
 .import-drop .hint{font-size:13px;color:#8a9099;margin-top:6px;}
 .import-toolbar{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;}
 .enc-bar{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;font-size:12px;color:#4e5969;}
-.enc-bar select{padding:6px 10px;border:1px solid #d9d9d9;border-radius:8px;font-size:13px;color:#1f2329;background:#fff;cursor:pointer;outline:none;}
-.enc-bar select:focus{border-color:#0052d9;}
+.enc-bar select{padding:6px 10px;border:1px solid #d9d9d9;border-radius:8px;font-size:13px;background:#fff;cursor:pointer;}
 .enc-tip{color:#8a9099;}
-.btn-download{background:#fff;border:1px solid #0052d9;color:#0052d9;padding:9px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-download{background:#fff;border:1px solid #0052d9;color:#0052d9;padding:9px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px;}
 .btn-download:hover{background:#e8f0fe;}
 .import-preview{margin-top:14px;max-height:260px;overflow:auto;border:1px solid #f0f1f3;border-radius:8px;}
 .import-preview table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -197,56 +168,83 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .template-info{margin-top:10px;padding:12px;background:#fffbe6;border-radius:8px;font-size:12px;color:#ad6800;line-height:1.8;}
 .template-info code{background:#fff;padding:1px 6px;border-radius:4px;font-family:monospace;}
 .template-info b{display:block;margin-bottom:4px;}
-
 .term-info{margin-top:10px;padding:12px 14px;background:#f0f7ff;border:1px solid #d6e8ff;border-radius:10px;font-size:13px;color:#0052d9;line-height:1.9;}
 .term-info b{font-weight:700;color:#003fab;}
 .term-info.warn{background:#fff7e6;border-color:#ffe0a3;color:#ad6800;}
-.term-info.warn b{color:#ad6800;}
 .term-sub{font-size:12px;color:#8a9099;margin-top:4px;line-height:1.7;}
 .period-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px;margin-top:8px;max-height:250px;overflow:auto;padding-right:4px;}
 .period-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#4e5969;}
 .period-item .pn{min-width:46px;color:#8a9099;flex-shrink:0;}
-.period-item input[type=time]{padding:5px 4px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;width:88px;font-family:inherit;background:#fff;}
-.period-item input[type=time]:focus{outline:none;border-color:#0052d9;box-shadow:0 0 0 2px rgba(0,82,217,.12);}
-.tt-tip{margin-top:12px;padding:12px 14px;background:#f6ffed;border:1px solid #d9f7be;border-radius:10px;font-size:12px;color:#389e0d;line-height:1.8;}
-.tt-tip b{display:block;margin-bottom:4px;}
-.tt-tip code{background:#fff;padding:1px 5px;border-radius:4px;font-family:monospace;}
-.tt-badge{display:inline-block;background:#722ed1;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px;}
+.period-item input[type=time]{padding:5px 4px;border:1px solid #e5e6eb;border-radius:6px;font-size:12px;width:88px;font-family:inherit;}
 .term-now{display:inline-block;background:#0052d9;color:#fff;font-size:12px;padding:3px 10px;border-radius:12px;font-weight:600;margin-top:6px;}
-
 .tp-preview{border-radius:12px;overflow:hidden;border:1px solid #e5e6eb;margin-bottom:16px;background:#f0f2f5;}
-.tp-pv-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;font-size:12px;font-weight:600;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.35);}
+.tp-pv-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#fff;font-size:12px;font-weight:600;letter-spacing:1px;}
 .tp-pv-topbar .tp-pv-clock{font-size:15px;font-variant-numeric:tabular-nums;}
-.tp-pv-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;flex-shrink:0;}
-.tp-pv-body{padding:10px;display:flex;gap:8px;align-items:center;background:#f0f2f5;transition:background .2s;}
+.tp-pv-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;box-shadow:0 0 6px #4ade80;}
+.tp-pv-body{padding:10px;display:flex;gap:8px;align-items:center;background:#f0f2f5;}
 .tp-pv-cal{display:flex;gap:4px;}
-.tp-pv-day{width:24px;height:30px;border-radius:6px;background:#fff;font-size:11px;font-weight:700;color:#1f2329;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.tp-pv-card{flex:1;display:flex;align-items:center;gap:8px;background:#fff;padding:8px 10px;font-size:12px;font-weight:600;color:#1f2329;overflow:hidden;transition:border-radius .2s;}
-.tp-pv-card .bar{width:4px;height:20px;border-radius:2px;flex-shrink:0;background:#e11d48;transition:background .2s;}
-
+.tp-pv-day{width:24px;height:30px;border-radius:6px;background:#fff;font-size:11px;font-weight:700;color:#1f2329;display:flex;align-items:center;justify-content:center;}
+.tp-pv-card{flex:1;display:flex;align-items:center;gap:8px;background:#fff;padding:8px 10px;font-size:12px;font-weight:600;color:#1f2329;}
+.tp-pv-card .bar{width:4px;height:20px;border-radius:2px;background:#e11d48;}
 .tp-sec{background:#fafbfc;border:1px solid #f0f1f3;border-radius:12px;padding:16px;margin-bottom:14px;}
 .tp-sec-title{font-size:13px;font-weight:700;color:#1f2329;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .tp-sec-title::before{content:'';width:3px;height:13px;border-radius:2px;background:#0052d9;}
 .tp-swatches{display:flex;gap:8px;flex-wrap:wrap;}
-.tp-swatch{width:46px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:.2s;position:relative;}
+.tp-swatch{width:46px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.12);position:relative;background-size:cover;background-position:center;}
 .tp-swatch:hover{transform:translateY(-2px);}
 .tp-swatch.sel{border-color:#1f2329;box-shadow:0 0 0 2px #fff,0 0 0 4px #0052d9;}
 .tp-swatch.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.55);}
 .tp-color{width:100%;height:38px;border:1px solid #e5e6eb;border-radius:8px;padding:3px;background:#fff;cursor:pointer;}
 .tp-checks{display:flex;flex-wrap:wrap;gap:10px 20px;}
-.tp-checks label{display:flex;align-items:center;gap:6px;font-size:13px;color:#4e5969;cursor:pointer;user-select:none;}
+.tp-checks label{display:flex;align-items:center;gap:6px;font-size:13px;color:#4e5969;cursor:pointer;}
 .tp-day-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .tp-day-row .dn{font-size:12px;font-weight:600;color:#4e5969;width:36px;flex-shrink:0;}
 .tp-day-row .tp-color-sm{width:38px;height:32px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
 .tp-day-row .form-input{padding:6px 10px;font-size:12px;flex:1;min-width:0;}
 .tp-hint{font-size:12px;color:#8a9099;line-height:1.7;margin-top:6px;}
-
-.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,.2);animation:toastIn .3s;}
+.loader-preview{position:relative;border-radius:12px;padding:36px 20px;text-align:center;color:#fff;margin-bottom:14px;overflow:hidden;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3c72,#2a5298,#7e57c2);}
+.loader-preview > *{position:relative;z-index:1;}
+.lp-ring{width:56px;height:56px;position:relative;margin-bottom:16px;}
+.lp-ring::before,.lp-ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:4px solid rgba(255,255,255,.15);}
+.lp-ring::after{border-top-color:#fff;border-right-color:#fff;animation:lpSpin 1s linear infinite;}
+@keyframes lpSpin{to{transform:rotate(360deg);}}
+.lp-dots{display:flex;gap:8px;margin-bottom:16px;}
+.lp-dots span{width:12px;height:12px;border-radius:50%;background:#fff;animation:lpBounce 1.2s ease-in-out infinite;}
+.lp-dots span:nth-child(2){animation-delay:.15s;}
+.lp-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes lpBounce{0%,80%,100%{transform:scale(.6);opacity:.5;}40%{transform:scale(1);opacity:1;}}
+.lp-wave{font-size:26px;font-weight:300;letter-spacing:6px;margin-bottom:16px;}
+.lp-wave span{display:inline-block;animation:lpWave 1.4s ease-in-out infinite;}
+.lp-wave span:nth-child(2){animation-delay:.1s;}
+.lp-wave span:nth-child(3){animation-delay:.2s;}
+.lp-wave span:nth-child(4){animation-delay:.3s;}
+.lp-wave span:nth-child(5){animation-delay:.4s;}
+.lp-wave span:nth-child(6){animation-delay:.5s;}
+.lp-wave span:nth-child(7){animation-delay:.6s;}
+.lp-wave span:nth-child(8){animation-delay:.7s;}
+@keyframes lpWave{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.lp-bar{width:60%;max-width:200px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;margin-bottom:16px;}
+.lp-bar span{display:block;height:100%;background:#fff;width:40%;border-radius:2px;animation:lpBar 1.4s ease-in-out infinite;}
+@keyframes lpBar{0%{transform:translateX(-100%);}100%{transform:translateX(350%);}}
+.lp-pulse{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.15);position:relative;margin-bottom:16px;}
+.lp-pulse::before,.lp-pulse::after{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.5);animation:lpPulse 1.6s ease-out infinite;}
+.lp-pulse::after{animation-delay:.5s;}
+@keyframes lpPulse{0%{transform:scale(.6);opacity:1;}100%{transform:scale(1.6);opacity:0;}}
+.lp-text{font-size:16px;font-weight:300;letter-spacing:4px;margin-top:4px;}
+.lp-sub{font-size:12px;opacity:.6;letter-spacing:2px;margin-top:6px;}
+.lp-none{font-size:13px;opacity:.7;}
+.p404-preview{position:relative;border-radius:12px;padding:26px 20px;text-align:center;color:#fff;margin-bottom:14px;overflow:hidden;background:linear-gradient(135deg,#0f2027,#2c5364);background-size:cover;background-position:center;}
+.p404-preview::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.15),transparent 45%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.1),transparent 45%);pointer-events:none;}
+.p404-preview > *{position:relative;}
+.p404-pv-emoji{font-size:40px;line-height:1;margin-bottom:6px;}
+.p404-pv-code{font-size:52px;font-weight:900;line-height:1;background:linear-gradient(135deg,#fff,#a8d8ff);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:4px;margin-bottom:8px;}
+.p404-pv-title{font-size:17px;font-weight:700;margin-bottom:4px;}
+.p404-pv-sub{font-size:12px;opacity:.85;margin-bottom:12px;line-height:1.5;word-break:break-word;}
+.p404-pv-btn{display:inline-block;padding:6px 18px;border-radius:20px;background:#fff;color:#1f2329;font-size:12px;font-weight:600;}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,.2);}
 .toast.success{background:#52c41a;}
 .toast.error{background:#e34d59;}
 .toast.info{background:#0052d9;}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,-20px);}to{opacity:1;transform:translate(-50%,0);}}
-
 @media(max-width:860px){
   .admin-body{grid-template-columns:1fr;}
   .sidebar{border-right:none;border-bottom:1px solid #e7e8eb;padding:12px 0;}
@@ -257,7 +255,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
   .content{padding:16px;}
   .event-list-header{display:none;}
   .event-row{grid-template-columns:1fr;gap:6px;padding:14px 16px;}
-  .form-row,.form-row-3{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
   .tp-day-row{flex-wrap:wrap;}
   .sync-badge{display:none;}
 }
@@ -269,9 +267,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
   <div class="logo"><i>📆</i>日历管理平台</div>
   <div class="header-right">
     <span class="sync-badge" id="syncBadge"><span class="sd"></span><span id="syncText">初始化…</span></span>
-    <div class="links">
-      <a href="index.html" target="_blank">🔍 查看展示页</a>
-    </div>
+    <div class="links"><a href="index.html" target="_blank">🔍 查看展示页</a></div>
   </div>
 </div>
 
@@ -279,27 +275,16 @@ textarea.form-input{resize:vertical;min-height:70px;}
   <aside class="sidebar">
     <div class="cal-group">
       <div class="group-title">我的日历</div>
-      <div class="cal-switch active" data-cal="all" onclick="setFilter('all')">
-        <span class="cb-dot" style="background:linear-gradient(90deg,#3b82f6,#e11d48);"></span>
-        <span class="cb-label">全部日历</span>
-        <span class="cb-count" id="cntAll">0</span>
-      </div>
-      <div class="cal-switch" data-cal="A" onclick="setFilter('A')">
-        <span class="cb-dot" style="background:#3b82f6;"></span>
-        <span class="cb-label">📅 日历A · 商务日程</span>
-        <span class="cb-count" id="cntA">0</span>
-      </div>
-      <div class="cal-switch" data-cal="B" onclick="setFilter('B')">
-        <span class="cb-dot" style="background:#e11d48;"></span>
-        <span class="cb-label">🎨 日历B · 主题日历</span>
-        <span class="cb-count" id="cntB">0</span>
-      </div>
+      <div class="cal-switch active" data-cal="all" onclick="setFilter('all')"><span class="cb-dot" style="background:linear-gradient(90deg,#3b82f6,#e11d48);"></span><span class="cb-label">全部日历</span><span class="cb-count" id="cntAll">0</span></div>
+      <div class="cal-switch" data-cal="A" onclick="setFilter('A')"><span class="cb-dot" style="background:#3b82f6;"></span><span class="cb-label">📅 日历A · 商务日程</span><span class="cb-count" id="cntA">0</span></div>
+      <div class="cal-switch" data-cal="B" onclick="setFilter('B')"><span class="cb-dot" style="background:#e11d48;"></span><span class="cb-label">🎨 日历B · 主题日历</span><span class="cb-count" id="cntB">0</span></div>
     </div>
     <div class="sidebar-actions">
       <button class="btn-primary" onclick="openCreate()">＋ 创建日程</button>
       <button class="btn-secondary" onclick="openImport()">📥 导入表格</button>
       <button class="btn-secondary" onclick="openTermSetting()">🎓 教学周设置</button>
       <button class="btn-secondary" onclick="openTheme()">🎨 展示页美化</button>
+      <button class="btn-secondary" onclick="open404Setting()">🚧 404 状态设置</button>
       <button class="btn-danger-outline" onclick="clearAll()">🗑 清空全部</button>
     </div>
   </aside>
@@ -307,41 +292,20 @@ textarea.form-input{resize:vertical;min-height:70px;}
   <main class="content">
     <div class="content-header">
       <div class="content-title">日程管理<span class="sub" id="subInfo">管理所有日历的日程安排</span></div>
-      <div class="toolbar">
-        <button class="btn-primary" onclick="openCreate()"><span style="font-size:15px;">＋</span>新建日程</button>
-      </div>
+      <div class="toolbar"><button class="btn-primary" onclick="openCreate()">＋ 新建日程</button></div>
     </div>
 
     <div class="filter-bar">
       <div class="filter-row">
-        <div class="filter-search">
-          <span class="fs-icon">🔍</span>
-          <input id="filterKeyword" placeholder="搜索标题 / 地点 / 备注关键词…" oninput="onFilterChange()">
-        </div>
-        <div class="filter-date-range">
-          <input type="date" id="filterDateFrom" onchange="onFilterChange()">
-          <span class="dr-sep">至</span>
-          <input type="date" id="filterDateTo" onchange="onFilterChange()">
-        </div>
+        <div class="filter-search"><span class="fs-icon">🔍</span><input id="filterKeyword" placeholder="搜索标题 / 地点 / 备注关键词…" oninput="onFilterChange()"></div>
+        <div class="filter-date-range"><input type="date" id="filterDateFrom" onchange="onFilterChange()"><span class="dr-sep">至</span><input type="date" id="filterDateTo" onchange="onFilterChange()"></div>
         <select class="filter-select" id="filterRepeat" onchange="onFilterChange()">
-          <option value="">所有重复</option>
-          <option value="none">不重复</option>
-          <option value="daily">每天</option>
-          <option value="workday">工作日</option>
-          <option value="weekly">每周</option>
-          <option value="monthly">每月</option>
-          <option value="yearly">每年</option>
-          <option value="custom">自定义</option>
+          <option value="">所有重复</option><option value="none">不重复</option><option value="daily">每天</option><option value="workday">工作日</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="yearly">每年</option><option value="custom">自定义</option>
         </select>
         <select class="filter-select" id="filterAllDay" onchange="onFilterChange()">
-          <option value="">全部时段</option>
-          <option value="allday">仅全天</option>
-          <option value="timed">仅时段</option>
+          <option value="">全部时段</option><option value="allday">仅全天</option><option value="timed">仅时段</option>
         </select>
-        <div class="filter-summary">
-          匹配 <span class="filter-count" id="filterCount">0</span> 条
-          <button class="filter-reset" onclick="resetFilters()">重置</button>
-        </div>
+        <div class="filter-summary">匹配 <span class="filter-count" id="filterCount">0</span> 条<button class="filter-reset" onclick="resetFilters()">重置</button></div>
       </div>
       <div class="filter-chips" id="filterChips"></div>
     </div>
@@ -353,9 +317,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
     </div>
 
     <div class="event-list">
-      <div class="event-list-header">
-        <div>日期</div><div>标题</div><div>时间</div><div>地点</div><div>重复</div><div style="text-align:right;">操作</div>
-      </div>
+      <div class="event-list-header"><div>日期</div><div>标题</div><div>时间</div><div>地点</div><div>重复</div><div style="text-align:right;">操作</div></div>
       <div id="eventRows"></div>
     </div>
     <div class="pagination" id="pagination"></div>
@@ -364,278 +326,169 @@ textarea.form-input{resize:vertical;min-height:70px;}
 
 <div class="modal-mask" id="modalEdit">
   <div class="modal">
-    <div class="modal-header">
-      <h3 id="editTitle">新建日程</h3>
-      <button class="modal-close" onclick="closeModal('modalEdit')">×</button>
-    </div>
+    <div class="modal-header"><h3 id="editTitle">新建日程</h3><button class="modal-close" onclick="closeModal('modalEdit')">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="evId">
-
       <div class="form-group">
         <label class="form-label">归属日历<span class="req">*</span></label>
         <div class="calendar-picker">
-          <div class="cal-option selected" data-cal="A" onclick="selectCal('A')">
-            <div class="cal-icon">📅</div>
-            <div class="cal-name">日历A</div>
-            <div class="cal-desc">商务日程 · 蓝色</div>
-          </div>
-          <div class="cal-option" data-cal="B" onclick="selectCal('B')">
-            <div class="cal-icon">🎨</div>
-            <div class="cal-name">日历B</div>
-            <div class="cal-desc">主题日历 · 彩色</div>
-          </div>
+          <div class="cal-option selected" data-cal="A" onclick="selectCal('A')"><div class="cal-icon">📅</div><div class="cal-name">日历A</div><div class="cal-desc">商务日程 · 蓝色</div></div>
+          <div class="cal-option" data-cal="B" onclick="selectCal('B')"><div class="cal-icon">🎨</div><div class="cal-name">日历B</div><div class="cal-desc">主题日历 · 彩色</div></div>
         </div>
       </div>
-
-      <div class="form-group">
-        <label class="form-label">日程标题<span class="req">*</span></label>
-        <input class="form-input" id="evTitle" placeholder="请输入日程标题，例如：周会、项目评审">
-      </div>
+      <div class="form-group"><label class="form-label">日程标题<span class="req">*</span></label><input class="form-input" id="evTitle" placeholder="请输入日程标题，例如：周会、项目评审"></div>
 
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">开始日期<span class="req">*</span></label>
-          <input class="form-input" type="date" id="evDate">
-        </div>
-        <div class="form-group">
-          <label class="form-label">
-            <label class="all-day-check"><input type="checkbox" id="evAllDay" onchange="toggleAllDay()"> 全天</label>
-          </label>
-          <div class="form-row" style="gap:8px;">
-            <input class="form-input" type="time" id="evStart" value="09:00">
-            <input class="form-input" type="time" id="evEnd" value="10:00">
-          </div>
-        </div>
+        <div class="form-group"><label class="form-label">开始日期<span class="req">*</span></label><input class="form-input" type="date" id="evDate"></div>
+        <div class="form-group"><label class="form-label">结束日期 <span style="color:#8a9099;font-weight:400;">（可选，跨天日程填）</span></label><input class="form-input" type="date" id="evEndDate"></div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">地点</label>
-        <input class="form-input" id="evLocation" placeholder="例如：会议室A、XX咖啡厅">
+        <label class="form-label"><label class="all-day-check"><input type="checkbox" id="evAllDay" onchange="toggleAllDay()"> 全天</label></label>
+        <div class="form-row" style="gap:8px;"><input class="form-input" type="time" id="evStart" value="09:00"><input class="form-input" type="time" id="evEnd" value="10:00"></div>
       </div>
+
+      <div class="form-group"><label class="form-label">地点</label><input class="form-input" id="evLocation" placeholder="例如：会议室A、XX咖啡厅"></div>
 
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">重复</label>
           <select class="form-select" id="evRepeat" onchange="onRepeatChange()">
-            <option value="none">不重复</option>
-            <option value="daily">每天</option>
-            <option value="workday">每个工作日</option>
-            <option value="weekly">每周</option>
-            <option value="monthly">每月</option>
-            <option value="yearly">每年</option>
-            <option value="custom">自定义…</option>
+            <option value="none">不重复</option><option value="daily">每天</option><option value="workday">每个工作日</option><option value="weekly">每周</option><option value="monthly">每月</option><option value="yearly">每年</option><option value="custom">自定义…</option>
           </select>
           <div class="custom-repeat-panel" id="customRepeatPanel">
-            <div class="cr-row">
-              <label>频率</label>
-              每 <input type="number" id="crInterval" min="1" max="99" value="2">
-              <select id="crUnit">
-                <option value="day">天</option>
-                <option value="week" selected>周</option>
-                <option value="month">月</option>
-                <option value="year">年</option>
-              </select>
-              重复一次
-            </div>
-            <div class="cr-row">
-              <label>结束</label>
-              <div class="cr-end-opts">
-                <label><input type="radio" name="crEnd" value="never" checked onchange="toggleCrEnd()"> 永不结束</label>
-                <label><input type="radio" name="crEnd" value="count" onchange="toggleCrEnd()"> 重复 <input type="number" id="crCount" min="1" max="999" value="10" style="width:60px;padding:4px 6px;border:1px solid #e5e6eb;border-radius:4px;font-size:12px;" disabled> 次后</label>
-                <label><input type="radio" name="crEnd" value="until" onchange="toggleCrEnd()"> 截止到 <input type="date" id="crUntil" disabled></label>
-              </div>
-            </div>
+            <div class="cr-row"><label>频率</label>每 <input type="number" id="crInterval" min="1" max="99" value="2"><select id="crUnit"><option value="day">天</option><option value="week" selected>周</option><option value="month">月</option><option value="year">年</option></select>重复一次</div>
+            <div class="cr-row"><label>结束</label><div class="cr-end-opts">
+              <label><input type="radio" name="crEnd" value="never" checked onchange="toggleCrEnd()"> 永不结束</label>
+              <label><input type="radio" name="crEnd" value="count" onchange="toggleCrEnd()"> 重复 <input type="number" id="crCount" min="1" max="999" value="10" style="width:60px;padding:4px 6px;border:1px solid #e5e6eb;border-radius:4px;font-size:12px;" disabled> 次后</label>
+              <label><input type="radio" name="crEnd" value="until" onchange="toggleCrEnd()"> 截止到 <input type="date" id="crUntil" disabled></label>
+            </div></div>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">提醒</label>
           <select class="form-select" id="evRemind">
-            <option value="0">不提醒</option>
-            <option value="5">5分钟前</option>
-            <option value="15" selected>15分钟前</option>
-            <option value="30">30分钟前</option>
-            <option value="60">1小时前</option>
-            <option value="1440">1天前</option>
+            <option value="0">不提醒</option><option value="5">5分钟前</option><option value="15" selected>15分钟前</option><option value="30">30分钟前</option><option value="60">1小时前</option><option value="1440">1天前</option>
           </select>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">日程颜色</label>
-        <div class="color-picker" id="colorPicker"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">备注描述</label>
-        <textarea class="form-input" id="evDesc" placeholder="添加日程备注、参与人、议程等信息"></textarea>
-      </div>
+      <div class="form-group"><label class="form-label">日程颜色</label><div class="color-picker" id="colorPicker"></div></div>
+      <div class="form-group"><label class="form-label">备注描述</label><textarea class="form-input" id="evDesc" placeholder="添加日程备注、参与人、议程等信息"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modalEdit')">取消</button>
-      <button class="btn-primary" onclick="saveEvent()">保存</button>
-    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalEdit')">取消</button><button class="btn-primary" onclick="saveEvent()">保存</button></div>
   </div>
 </div>
 
 <div class="modal-mask" id="modalImport">
   <div class="modal" style="max-width:680px;">
-    <div class="modal-header">
-      <h3>从表格批量导入日程</h3>
-      <button class="modal-close" onclick="closeModal('modalImport')">×</button>
-    </div>
+    <div class="modal-header"><h3>从表格批量导入日程</h3><button class="modal-close" onclick="closeModal('modalImport')">×</button></div>
     <div class="modal-body">
       <div class="import-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
         <div class="icon">📂</div>
         <div style="font-size:15px;font-weight:600;">点击或拖拽文件到此处上传</div>
-        <div class="hint">支持 .xlsx / .xls / .csv 格式，建议先下载标准模板填写</div>
+        <div class="hint">支持 .xlsx / .xls / .csv 格式</div>
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none;">
       </div>
-      <div class="enc-bar">
-        <span>文件编码：</span>
-        <select id="fileEncoding" onchange="onEncodingChange()">
-          <option value="auto">自动识别（推荐）</option>
-          <option value="utf-8">UTF-8</option>
-          <option value="gbk">GBK / GB18030</option>
-        </select>
-        <span class="enc-tip">仅对 .csv 文件生效；中文显示为乱码时可手动切换后重新解析</span>
+      <div class="enc-bar"><span>文件编码：</span>
+        <select id="fileEncoding" onchange="onEncodingChange()"><option value="auto">自动识别（推荐）</option><option value="utf-8">UTF-8</option><option value="gbk">GBK / GB18030</option></select>
+        <span class="enc-tip">仅对 .csv 生效</span>
       </div>
-      <div class="import-toolbar">
-        <button class="btn-download" onclick="downloadTemplate()">📥 下载导入模板（Excel）</button>
-        <span style="font-size:12px;color:#8a9099;">按模板填写后上传，可避免字段错误</span>
-      </div>
+      <div class="import-toolbar"><button class="btn-download" onclick="downloadTemplate()">📥 下载导入模板（Excel）</button></div>
       <div class="template-info">
-        <b>📋 表格字段说明（第一行为表头，按顺序）：</b>
-        <code>归属日历</code>（填 A 或 B）、<code>标题</code>（必填）、<code>日期</code>（必填，格式 YYYY-MM-DD）、<code>开始时间</code>（HH:MM，留空视为全天）、<code>结束时间</code>（HH:MM）、<code>地点</code>、<code>重复</code>（none / daily / workday / weekly / monthly / yearly）、<code>提醒</code>（分钟数，0=不提醒，15=15分钟前）、<code>描述</code>
-        <br>模板中第一列为 <code>※</code> 的行为说明行，导入时会自动忽略；自定义重复请在页面「重复 → 自定义…」中单独设置。
+        <b>📋 表格字段（第一行为表头）：</b>
+        <code>归属日历</code>、<code>标题</code>、<code>日期</code>、<code>开始时间</code>、<code>结束时间</code>、<code>地点</code>、<code>重复</code>、<code>提醒</code>、<code>描述</code>
+        <br>第一列为 <code>※</code> 的行为说明行，导入时自动忽略。
       </div>
-      <div class="tt-tip">
-        <b>🎓 支持直接上传「一维课表」，自动批量导入日历B</b>
-        若表格表头含 <code>星期</code>、<code>周次</code>、<code>节次</code>、<code>课程名称</code> 等列（高校课表常见格式），系统会自动识别并按「教学周设置」把每一节课的<b>周次 + 星期 + 节次换算成具体日期与时间</b>，无需人工逐条填写，全部归入日历B。
-        <div style="margin-top:4px;">使用前请先在左侧「🎓 教学周设置」中设定教学周的开始与结束日期。</div>
+      <div class="term-info" style="margin-top:14px;background:#f6ffed;border-color:#d9f7be;color:#389e0d;font-size:12px;">
+        🎓 若表头含 <code>星期</code>、<code>周次</code>、<code>节次</code>、<code>课程名称</code> 等列，会自动识别为「一维课表」，按教学周换算后归入日历B。
       </div>
       <div id="importPreview" class="import-preview" style="display:none;"></div>
       <div id="importResult"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modalImport')">关闭</button>
-      <button class="btn-primary" id="btnConfirmImport" onclick="confirmImport()" disabled>确认导入</button>
-    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalImport')">关闭</button><button class="btn-primary" id="btnConfirmImport" onclick="confirmImport()" disabled>确认导入</button></div>
   </div>
 </div>
 
 <div class="modal-mask" id="modalTerm">
   <div class="modal" style="max-width:620px;">
-    <div class="modal-header">
-      <h3>教学周设置</h3>
-      <button class="modal-close" onclick="closeModal('modalTerm')">×</button>
-    </div>
+    <div class="modal-header"><h3>教学周设置</h3><button class="modal-close" onclick="closeModal('modalTerm')">×</button></div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">教学周开始日期<span class="req">*</span></label>
-          <input class="form-input" type="date" id="termStart" onchange="onTermInput()">
-          <div class="term-sub">即第 1 教学周的起始日，建议填写<b>周一</b></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">教学周结束日期<span class="req">*</span></label>
-          <input class="form-input" type="date" id="termEnd" onchange="onTermInput()">
-          <div class="term-sub">最后一周的任一天即可，用于计算总周数</div>
-        </div>
+        <div class="form-group"><label class="form-label">教学周开始日期<span class="req">*</span></label><input class="form-input" type="date" id="termStart" onchange="onTermInput()"><div class="term-sub">建议填写<b>周一</b></div></div>
+        <div class="form-group"><label class="form-label">教学周结束日期<span class="req">*</span></label><input class="form-input" type="date" id="termEnd" onchange="onTermInput()"><div class="term-sub">最后一周的任一天即可</div></div>
       </div>
-
       <div class="term-info" id="termInfo"></div>
-
       <div class="form-group" style="margin-top:16px;">
         <label class="form-label">节次时间表（课表导入换算用）</label>
-        <div class="term-sub" style="margin-bottom:4px;">「节次」列如 <code>1-2节</code> 会按这里的时间换算；默认作息可按学校实际情况修改</div>
         <div class="period-grid" id="periodGrid"></div>
       </div>
-
-      <div class="term-sub" style="margin-top:8px;">
-        保存后，展示页顶部实时时间右侧会显示「第 N 教学周」；超出区间时显示「假期中」，未开始时显示「未开学」。
-      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="resetPeriods()">恢复默认作息</button>
-      <button class="btn-secondary" onclick="closeModal('modalTerm')">取消</button>
-      <button class="btn-primary" onclick="saveTermSetting()">保存</button>
-    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="resetPeriods()">恢复默认作息</button><button class="btn-secondary" onclick="closeModal('modalTerm')">取消</button><button class="btn-primary" onclick="saveTermSetting()">保存</button></div>
   </div>
 </div>
 
 <div class="modal-mask" id="modalTheme">
   <div class="modal" style="max-width:720px;">
-    <div class="modal-header">
-      <h3>访问端页面美化</h3>
-      <button class="modal-close" onclick="closeModal('modalTheme')">×</button>
-    </div>
+    <div class="modal-header"><h3>访问端页面美化</h3><button class="modal-close" onclick="closeModal('modalTheme')">×</button></div>
     <div class="modal-body">
-
       <div class="tp-preview">
         <div class="tp-pv-topbar" id="pvTopbar">
-          <span style="display:flex;align-items:center;gap:6px;">
-            <span class="tp-pv-dot" id="pvDot"></span><span id="pvTitle">日历展示中心</span>
-          </span>
+          <span style="display:flex;align-items:center;gap:6px;"><span class="tp-pv-dot" id="pvDot"></span><span id="pvTitle">日历展示中心</span></span>
           <span class="tp-pv-clock">20:26:31</span>
         </div>
         <div class="tp-pv-body" id="pvBody">
-          <div class="tp-pv-cal">
-            <div class="tp-pv-day">14</div>
-            <div class="tp-pv-day" id="pvToday">15</div>
-            <div class="tp-pv-day">16</div>
-          </div>
-          <div class="tp-pv-card" id="pvCard">
-            <span class="bar" id="pvBar"></span>
-            <span>团队早会 · 09:00</span>
-          </div>
+          <div class="tp-pv-cal"><div class="tp-pv-day">14</div><div class="tp-pv-day" id="pvToday">15</div><div class="tp-pv-day">16</div></div>
+          <div class="tp-pv-card" id="pvCard"><span class="bar" id="pvBar"></span><span>团队早会 · 09:00</span></div>
         </div>
       </div>
 
       <div class="tp-sec">
         <div class="tp-sec-title">基础信息</div>
-        <div class="form-group">
-          <label class="form-label">展示页标题</label>
-          <input class="form-input" id="tpTitle" maxlength="20" placeholder="日历展示中心" oninput="updateThemePreview()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">顶栏配色</label>
-          <div class="tp-swatches" id="tpTopbarSwatches"></div>
-          <input class="form-input" id="tpTopbarCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景，如 linear-gradient(90deg,#111,#333)" oninput="onTopbarCustom()">
-        </div>
+        <div class="form-group"><label class="form-label">展示页标题</label><input class="form-input" id="tpTitle" maxlength="20" placeholder="日历展示中心" oninput="updateThemePreview()"></div>
+        <div class="form-group"><label class="form-label">顶栏配色</label><div class="tp-swatches" id="tpTopbarSwatches"></div><input class="form-input" id="tpTopbarCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景" oninput="onTopbarCustom()"></div>
       </div>
 
       <div class="tp-sec">
         <div class="tp-sec-title">配色与形状</div>
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">日历A 主色</label>
-            <input type="color" class="tp-color" id="tpAccentA" value="#3b82f6" oninput="updateThemePreview()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">日历B 强调色</label>
-            <input type="color" class="tp-color" id="tpAccentB" value="#e11d48" oninput="updateThemePreview()">
-          </div>
+          <div class="form-group"><label class="form-label">日历A 主色</label><input type="color" class="tp-color" id="tpAccentA" value="#3b82f6" oninput="updateThemePreview()"></div>
+          <div class="form-group"><label class="form-label">日历B 强调色</label><input type="color" class="tp-color" id="tpAccentB" value="#e11d48" oninput="updateThemePreview()"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">页面背景</label>
-          <div class="tp-swatches" id="tpBgSwatches"></div>
-          <input class="form-input" id="tpBgCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景" oninput="onBgCustom()">
-        </div>
+        <div class="form-group"><label class="form-label">页面背景</label><div class="tp-swatches" id="tpBgSwatches"></div><input class="form-input" id="tpBgCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景" oninput="onBgCustom()"></div>
+        <div class="form-group"><label class="form-label">卡片圆角 <b id="tpRadiusVal" style="color:#0052d9;">16px</b></label><input type="range" id="tpRadius" min="0" max="28" value="16" style="width:100%;" oninput="onRadiusInput()"></div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">入场动画</div>
+        <div class="loader-preview" id="loaderPreview"><div id="loaderPvInner"></div></div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">卡片圆角 <b id="tpRadiusVal" style="color:#0052d9;">16px</b></label>
-            <input type="range" id="tpRadius" min="0" max="28" value="16" style="width:100%;" oninput="onRadiusInput()">
+            <label class="form-label">动画风格</label>
+            <select class="form-select" id="tpLoaderStyle" onchange="updateLoaderPreview()">
+              <option value="ring">旋转环（默认）</option>
+              <option value="dots">脉冲圆点</option>
+              <option value="wave">波浪文字</option>
+              <option value="bar">进度条</option>
+              <option value="pulse">圆环脉冲</option>
+              <option value="none">关闭（跳过）</option>
+            </select>
           </div>
           <div class="form-group">
-            <label class="form-label">入场动画</label>
+            <label class="form-label">停留时长</label>
             <select class="form-select" id="tpLoader" onchange="updateThemePreview()">
-              <option value="0">关闭（立即进入）</option>
+              <option value="0">立即进入</option>
               <option value="800">较快 0.8 秒</option>
               <option value="1400">标准 1.4 秒</option>
               <option value="2200">较慢 2.2 秒</option>
             </select>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">主文字</label><input class="form-input" id="tpLoaderText" maxlength="20" placeholder="CALENDAR" oninput="updateLoaderPreview()"></div>
+          <div class="form-group"><label class="form-label">副文字</label><input class="form-input" id="tpLoaderSub" maxlength="30" placeholder="正在加载日历数据…" oninput="updateLoaderPreview()"></div>
+        </div>
+        <div class="form-group"><label class="form-label">背景</label><div class="tp-swatches" id="tpLoaderBgSwatches"></div><input class="form-input" id="tpLoaderBgCustom" style="margin-top:10px;" placeholder="也可自定义 CSS 背景，如 linear-gradient(...) 或 url(...)" oninput="onLoaderBgCustom()"></div>
       </div>
 
       <div class="tp-sec">
@@ -656,254 +509,213 @@ textarea.form-input{resize:vertical;min-height:70px;}
       </div>
 
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="resetThemeForm()">恢复默认</button>
-      <button class="btn-secondary" onclick="closeModal('modalTheme')">取消</button>
-      <button class="btn-primary" onclick="saveTheme()">保存并应用</button>
+    <div class="modal-footer"><button class="btn-secondary" onclick="resetThemeForm()">恢复默认</button><button class="btn-secondary" onclick="closeModal('modalTheme')">取消</button><button class="btn-primary" onclick="saveTheme()">保存并应用</button></div>
+  </div>
+</div>
+
+<div class="modal-mask" id="modal404">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header"><h3>访问页 404 状态设置</h3><button class="modal-close" onclick="closeModal('modal404')">×</button></div>
+    <div class="modal-body">
+      <div class="tp-sec" style="margin-bottom:14px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap;">
+          <input type="checkbox" id="p404Enabled" onchange="update404Preview()" style="width:18px;height:18px;cursor:pointer;">
+          <span style="font-size:14px;font-weight:600;color:#1f2329;">启用 404 状态页面</span>
+          <span style="font-size:12px;color:#8a9099;">加 <code style="background:#f0f1f3;padding:1px 5px;border-radius:4px;">?no404=1</code> 可临时绕过</span>
+        </label>
+      </div>
+
+      <div class="p404-preview" id="p404Preview">
+        <div class="p404-pv-emoji" id="p404PvEmoji">🚧</div>
+        <div class="p404-pv-code" id="p404PvCode">404</div>
+        <div class="p404-pv-title" id="p404PvTitle">页面走丢了</div>
+        <div class="p404-pv-sub" id="p404PvSub">你访问的页面不存在，或者已经被移动到别处。</div>
+        <div class="p404-pv-btn" id="p404PvBtn">返回首页</div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">页面内容</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">图标</label><input class="form-input" id="p404Emoji" maxlength="8" placeholder="🚧" oninput="update404Preview()"></div>
+          <div class="form-group"><label class="form-label">错误码</label><input class="form-input" id="p404Code" maxlength="8" placeholder="404" oninput="update404Preview()"></div>
+        </div>
+        <div class="form-group"><label class="form-label">主标题</label><input class="form-input" id="p404Title" maxlength="30" placeholder="页面走丢了" oninput="update404Preview()"></div>
+        <div class="form-group"><label class="form-label">副标题 / 说明</label><input class="form-input" id="p404Subtitle" maxlength="80" placeholder="你访问的页面不存在，或者已经被移动到别处。" oninput="update404Preview()"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">按钮文字</label><input class="form-input" id="p404BtnText" maxlength="16" placeholder="返回首页" oninput="update404Preview()"></div>
+          <div class="form-group"><label class="form-label">按钮链接</label><input class="form-input" id="p404BtnUrl" placeholder="./index.html" oninput="update404Preview()"></div>
+        </div>
+      </div>
+
+      <div class="tp-sec">
+        <div class="tp-sec-title">背景主题</div>
+        <div class="tp-swatches" id="p404ThemeSwatches"></div>
+        <div class="form-group" id="p404CustomRow" style="margin-top:12px;display:none;">
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;"><label class="form-label">起始色</label><input type="color" class="tp-color" id="p404Bg1" value="#667eea" oninput="update404Preview()"></div>
+            <div class="form-group" style="margin-bottom:0;"><label class="form-label">结束色</label><input type="color" class="tp-color" id="p404Bg2" value="#764ba2" oninput="update404Preview()"></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">自定义 CSS 背景 <span style="color:#8a9099;font-weight:400;">（可选，优先级最高）</span></label>
+          <input class="form-input" id="p404BgCss" placeholder="支持 linear-gradient(...)、url(...)、#rrggbb 等。留空则使用上方主题" oninput="update404Preview()">
+          <div class="tp-hint">例如：<code style="background:#f0f1f3;padding:1px 5px;border-radius:4px;">url(https://picsum.photos/1920/1080)</code> 或 <code style="background:#f0f1f3;padding:1px 5px;border-radius:4px;">linear-gradient(135deg,#1a2a6c,#b21f1f)</code></div>
+        </div>
+      </div>
+
     </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modal404')">取消</button><button class="btn-primary" onclick="save404Setting()">保存并应用</button></div>
   </div>
 </div>
 
 <div id="toastContainer"></div>
 
 <script>
-/* ==================================================================
-   ★ 云同步配置区（已填入）
-   ================================================================== */
 const SUPABASE_URL = 'https://fyqfghqpolnmlgalfacu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Yy82euInOqqXRkqXbxg-eg_iMha8LKs';
 
-/* ============ 基础常量 ============ */
 const STORAGE_KEY = 'calendar_events_v1';
 const TERM_KEY = 'calendar_term_v1';
 const DISPLAY_THEME_KEY = 'calendar_display_theme_v1';
+const P404_KEY = 'calendar_404_v1';
 const CLOUD_EVENTS_TABLE = 'calendar_events';
 const CLOUD_SETTINGS_TABLE = 'app_settings';
 
 const COLORS_A = ['#3b82f6'];
 const COLORS_B = ['#e11d48','#f59e0b','#16a34a','#7c3aed','#0284c7','#ec4899'];
-let selCalInForm = 'A';
-let selColor = '#3b82f6';
-let filterCal = 'all';
-let parsedImportRows = [];
-let importMode = 'standard';
-let editingId = null;
-let currentPage = 1;
-let pageSize = 20;
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+let selCalInForm='A', selColor='#3b82f6', filterCal='all', parsedImportRows=[], importMode='standard', editingId=null, currentPage=1, pageSize=20;
+const PAGE_SIZE_OPTIONS=[10,20,50,100];
 
-/* ============ 云同步层 ============ */
-let sb = null;
-let _cloudEnabled = false;
-let _eventsCache = [];
-let _termCache = null;
-let _themeCache = null;
-let _cloudLastError = '';
+let sb=null, _cloudEnabled=false, _eventsCache=[], _termCache=null, _themeCache=null, _p404Cache=null, _cloudLastError='';
 
 function initCloud(){
-  if(!SUPABASE_URL || !SUPABASE_ANON_KEY){ _cloudEnabled=false; return false; }
-  if(typeof supabase === 'undefined'){ _cloudEnabled=false; _cloudLastError='Supabase SDK 未加载'; return false; }
-  try{
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    _cloudEnabled = true;
-    return true;
-  }catch(e){
-    _cloudEnabled = false;
-    _cloudLastError = e.message || String(e);
-    return false;
-  }
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY){_cloudEnabled=false;return false;}
+  if(typeof supabase==='undefined'){_cloudEnabled=false;_cloudLastError='Supabase SDK 未加载';return false;}
+  try{sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);_cloudEnabled=true;return true;}
+  catch(e){_cloudEnabled=false;_cloudLastError=e.message||String(e);return false;}
 }
-
 function updateSyncBadge(){
-  const el = document.getElementById('syncBadge');
-  const txt = document.getElementById('syncText');
-  if(!el || !txt) return;
+  const el=document.getElementById('syncBadge'),txt=document.getElementById('syncText');
+  if(!el||!txt)return;
   el.classList.remove('cloud','offline');
-  if(_cloudEnabled){
-    el.classList.add('cloud');
-    txt.textContent = '云同步已连接';
-  }else{
-    el.classList.add('offline');
-    txt.textContent = '本地模式';
-    el.title = _cloudLastError ? ('本地模式：'+_cloudLastError) : '未配置 Supabase，仅本设备可用';
-  }
+  if(_cloudEnabled){el.classList.add('cloud');txt.textContent='云同步已连接';}
+  else{el.classList.add('offline');txt.textContent='本地模式';el.title=_cloudLastError||'未配置 Supabase';}
 }
 
 function rowToEvent(row){
   return {
-    id: row.id,
-    calendarId: row.calendar_id || 'A',
-    title: row.title || '',
-    date: row.date || '',
-    startTime: row.start_time || '',
-    endTime: row.end_time || '',
-    allDay: !!row.all_day,
-    location: row.location || '',
-    repeat: row.repeat_rule || 'none',
-    remindBefore: row.remind_before != null ? String(row.remind_before) : '0',
-    description: row.description || '',
-    color: row.color || (row.calendar_id==='B'?'#e11d48':'#3b82f6'),
-    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    id:row.id, calendarId:row.calendar_id||'A', title:row.title||'',
+    date:row.date||'', endDate:row.end_date||'',
+    startTime:row.start_time||'', endTime:row.end_time||'', allDay:!!row.all_day,
+    location:row.location||'', repeat:row.repeat_rule||'none',
+    remindBefore:row.remind_before!=null?String(row.remind_before):'0',
+    description:row.description||'', color:row.color||(row.calendar_id==='B'?'#e11d48':'#3b82f6'),
+    createdAt:row.created_at?new Date(row.created_at).getTime():Date.now(),
   };
 }
 function eventToRow(ev){
   return {
-    id: ev.id,
-    calendar_id: ev.calendarId,
-    title: ev.title,
-    date: ev.date || '',
-    start_time: ev.startTime || '',
-    end_time: ev.endTime || '',
-    all_day: !!ev.allDay,
-    location: ev.location || '',
-    repeat_rule: ev.repeat || 'none',
-    remind_before: ev.remindBefore != null ? String(ev.remindBefore) : '0',
-    description: ev.description || '',
-    color: ev.color || '',
-    created_at: new Date(ev.createdAt || Date.now()).toISOString(),
+    id:ev.id, calendar_id:ev.calendarId, title:ev.title,
+    date:ev.date||'', end_date:ev.endDate||'',
+    start_time:ev.startTime||'', end_time:ev.endTime||'', all_day:!!ev.allDay,
+    location:ev.location||'', repeat_rule:ev.repeat||'none',
+    remind_before:ev.remindBefore!=null?String(ev.remindBefore):'0',
+    description:ev.description||'', color:ev.color||'',
+    created_at:new Date(ev.createdAt||Date.now()).toISOString(),
   };
 }
-
-function readLocalEvents(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }catch(e){ return []; }
-}
-function writeLocalEvents(list){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
-}
+function readLocalEvents(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){return [];}}
+function writeLocalEvents(list){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(list));}catch(e){}}
 
 async function fetchEvents(){
-  if(!_cloudEnabled){
-    _eventsCache = readLocalEvents();
-    return _eventsCache;
-  }
-  const { data, error } = await sb.from(CLOUD_EVENTS_TABLE).select('*');
-  if(error){
-    console.warn('云端读取日程失败，回退本地缓存：', error.message);
-    _eventsCache = readLocalEvents();
-    return _eventsCache;
-  }
-  _eventsCache = (data || []).map(rowToEvent);
+  if(!_cloudEnabled){_eventsCache=readLocalEvents();return _eventsCache;}
+  const {data,error}=await sb.from(CLOUD_EVENTS_TABLE).select('*');
+  if(error){console.warn('云端读取日程失败：',error.message);_eventsCache=readLocalEvents();return _eventsCache;}
+  _eventsCache=(data||[]).map(rowToEvent);
   writeLocalEvents(_eventsCache);
   return _eventsCache;
 }
-
 async function upsertEventCloud(ev){
   if(!_cloudEnabled){
-    const list = readLocalEvents();
-    const i = list.findIndex(e=>e.id===ev.id);
-    if(i>=0) list[i]=ev; else list.push(ev);
-    writeLocalEvents(list);
-    _eventsCache = list;
-    return;
+    const list=readLocalEvents();const i=list.findIndex(e=>e.id===ev.id);
+    if(i>=0)list[i]=ev;else list.push(ev);
+    writeLocalEvents(list);_eventsCache=list;return;
   }
-  const { error } = await sb.from(CLOUD_EVENTS_TABLE).upsert(eventToRow(ev));
-  if(error) throw error;
+  const {error}=await sb.from(CLOUD_EVENTS_TABLE).upsert(eventToRow(ev));
+  if(error)throw error;
   await fetchEvents();
 }
-
 async function deleteEventCloud(id){
-  if(!_cloudEnabled){
-    const list = readLocalEvents().filter(e=>e.id!==id);
-    writeLocalEvents(list);
-    _eventsCache = list;
-    return;
-  }
-  const { error } = await sb.from(CLOUD_EVENTS_TABLE).delete().eq('id', id);
-  if(error) throw error;
+  if(!_cloudEnabled){const list=readLocalEvents().filter(e=>e.id!==id);writeLocalEvents(list);_eventsCache=list;return;}
+  const {error}=await sb.from(CLOUD_EVENTS_TABLE).delete().eq('id',id);
+  if(error)throw error;
   await fetchEvents();
 }
-
 async function clearAllEventsCloud(){
-  if(!_cloudEnabled){
-    writeLocalEvents([]);
-    _eventsCache = [];
-    return;
-  }
-  const { error } = await sb.from(CLOUD_EVENTS_TABLE).delete().neq('id', '');
-  if(error) throw error;
+  if(!_cloudEnabled){writeLocalEvents([]);_eventsCache=[];return;}
+  const {error}=await sb.from(CLOUD_EVENTS_TABLE).delete().neq('id','');
+  if(error)throw error;
   await fetchEvents();
 }
-
 async function bulkInsertEventsCloud(rows){
-  if(!_cloudEnabled){
-    const list = readLocalEvents();
-    list.push(...rows);
-    writeLocalEvents(list);
-    _eventsCache = list;
-    return;
-  }
-  const payload = rows.map(eventToRow);
-  const { error } = await sb.from(CLOUD_EVENTS_TABLE).insert(payload);
-  if(error) throw error;
+  if(!_cloudEnabled){const list=readLocalEvents();list.push(...rows);writeLocalEvents(list);_eventsCache=list;return;}
+  const payload=rows.map(eventToRow);
+  const {error}=await sb.from(CLOUD_EVENTS_TABLE).insert(payload);
+  if(error)throw error;
   await fetchEvents();
 }
-
 async function fetchSettings(){
   if(!_cloudEnabled){
-    try{ _termCache = JSON.parse(localStorage.getItem(TERM_KEY)) || null; }catch(e){ _termCache = null; }
-    try{ _themeCache = JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY)) || null; }catch(e){ _themeCache = null; }
+    try{_termCache=JSON.parse(localStorage.getItem(TERM_KEY))||null;}catch(e){_termCache=null;}
+    try{_themeCache=JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY))||null;}catch(e){_themeCache=null;}
+    try{_p404Cache=JSON.parse(localStorage.getItem(P404_KEY))||null;}catch(e){_p404Cache=null;}
     return;
   }
-  const { data, error } = await sb.from(CLOUD_SETTINGS_TABLE).select('*');
+  const {data,error}=await sb.from(CLOUD_SETTINGS_TABLE).select('*');
   if(error){
-    console.warn('云端读取设置失败，回退本地缓存：', error.message);
-    try{ _termCache = JSON.parse(localStorage.getItem(TERM_KEY)) || null; }catch(e){ _termCache = null; }
-    try{ _themeCache = JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY)) || null; }catch(e){ _themeCache = null; }
+    console.warn('云端读取设置失败：',error.message);
+    try{_termCache=JSON.parse(localStorage.getItem(TERM_KEY))||null;}catch(e){_termCache=null;}
+    try{_themeCache=JSON.parse(localStorage.getItem(DISPLAY_THEME_KEY))||null;}catch(e){_themeCache=null;}
+    try{_p404Cache=JSON.parse(localStorage.getItem(P404_KEY))||null;}catch(e){_p404Cache=null;}
     return;
   }
-  _termCache = null;
-  _themeCache = null;
+  _termCache=null;_themeCache=null;_p404Cache=null;
   (data||[]).forEach(row=>{
-    if(row.key === 'term') _termCache = row.value;
-    else if(row.key === 'display_theme') _themeCache = row.value;
+    if(row.key==='term')_termCache=row.value;
+    else if(row.key==='display_theme')_themeCache=row.value;
+    else if(row.key==='page_404')_p404Cache=row.value;
   });
-  if(_termCache) try{ localStorage.setItem(TERM_KEY, JSON.stringify(_termCache)); }catch(e){}
-  if(_themeCache) try{ localStorage.setItem(DISPLAY_THEME_KEY, JSON.stringify(_themeCache)); }catch(e){}
+  if(_termCache)try{localStorage.setItem(TERM_KEY,JSON.stringify(_termCache));}catch(e){}
+  if(_themeCache)try{localStorage.setItem(DISPLAY_THEME_KEY,JSON.stringify(_themeCache));}catch(e){}
+  if(_p404Cache)try{localStorage.setItem(P404_KEY,JSON.stringify(_p404Cache));}catch(e){}
 }
-
-async function saveSettingCloud(key, value){
+async function saveSettingCloud(key,value){
   if(!_cloudEnabled){
-    if(key==='term'){ try{ localStorage.setItem(TERM_KEY, JSON.stringify(value)); }catch(e){} _termCache = value; }
-    else if(key==='display_theme'){ try{ localStorage.setItem(DISPLAY_THEME_KEY, JSON.stringify(value)); }catch(e){} _themeCache = value; }
+    if(key==='term'){try{localStorage.setItem(TERM_KEY,JSON.stringify(value));}catch(e){}_termCache=value;}
+    else if(key==='display_theme'){try{localStorage.setItem(DISPLAY_THEME_KEY,JSON.stringify(value));}catch(e){}_themeCache=value;}
+    else if(key==='page_404'){try{localStorage.setItem(P404_KEY,JSON.stringify(value));}catch(e){}_p404Cache=value;}
     return;
   }
-  const { error } = await sb.from(CLOUD_SETTINGS_TABLE).upsert({ key, value, updated_at: new Date().toISOString() });
-  if(error) throw error;
-  if(key==='term') _termCache = value;
-  else if(key==='display_theme') _themeCache = value;
+  const {error}=await sb.from(CLOUD_SETTINGS_TABLE).upsert({key,value,updated_at:new Date().toISOString()});
+  if(error)throw error;
+  if(key==='term')_termCache=value;
+  else if(key==='display_theme')_themeCache=value;
+  else if(key==='page_404')_p404Cache=value;
 }
+async function refreshAllFromCloud(){await fetchEvents();await fetchSettings();render();}
 
-async function refreshAllFromCloud(){
-  await fetchEvents();
-  await fetchSettings();
-  render();
-}
+function loadEvents(){return _eventsCache.slice();}
+function loadTerm(){return _termCache;}
+function loadDisplayTheme(){if(_themeCache&&typeof _themeCache==='object')return _themeCache;return Object.assign({},DISPLAY_DEFAULTS);}
+function genId(){return 'ev_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 
-/* ============ 兼容原逻辑：同步读取缓存 ============ */
-function loadEvents(){ return _eventsCache.slice(); }
-function loadTerm(){ return _termCache; }
-function loadDisplayTheme(){
-  if(_themeCache && typeof _themeCache === 'object') return _themeCache;
-  return Object.assign({}, DISPLAY_DEFAULTS);
-}
-function genId(){ return 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
-
-/* ============ 渲染 ============ */
-const weekCN = ['周日','周一','周二','周三','周四','周五','周六'];
+const weekCN=['周日','周一','周二','周三','周四','周五','周六'];
 function repeatLabel(r){
   if(!r||r==='none')return '不重复';
-  if(r==='daily')return '每天';
-  if(r==='weekly')return '每周';
-  if(r==='monthly')return '每月';
-  if(r==='yearly')return '每年';
-  if(r==='workday')return '工作日';
+  if(r==='daily')return '每天';if(r==='weekly')return '每周';if(r==='monthly')return '每月';if(r==='yearly')return '每年';if(r==='workday')return '工作日';
   if(r.startsWith('custom:')){
-    try{
-      const o=JSON.parse(r.slice(7));
-      const unitMap={day:'天',week:'周',month:'月',year:'年'};
-      let txt=`每${o.interval}${unitMap[o.unit]||o.unit}`;
-      if(o.endType==='count')txt+=` · 共${o.count}次`;
-      else if(o.endType==='until')txt+=` · 至${o.until}`;
+    try{const o=JSON.parse(r.slice(7));const unitMap={day:'天',week:'周',month:'月',year:'年'};let txt=`每${o.interval}${unitMap[o.unit]||o.unit}`;
+      if(o.endType==='count')txt+=` · 共${o.count}次`;else if(o.endType==='until')txt+=` · 至${o.until}`;
       return '自定义·'+txt;
     }catch(e){return '自定义';}
   }
@@ -912,9 +724,9 @@ function repeatLabel(r){
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function render(){
-  const all = loadEvents().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.startTime||'').localeCompare(b.startTime||''));
-  const a = all.filter(e=>e.calendarId==='A');
-  const b = all.filter(e=>e.calendarId==='B');
+  const all=loadEvents().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.startTime||'').localeCompare(b.startTime||''));
+  const a=all.filter(e=>e.calendarId==='A');
+  const b=all.filter(e=>e.calendarId==='B');
   document.getElementById('cntAll').textContent=all.length;
   document.getElementById('cntA').textContent=a.length;
   document.getElementById('cntB').textContent=b.length;
@@ -922,9 +734,11 @@ function render(){
   document.getElementById('statA').textContent=a.length;
   document.getElementById('statB').textContent=b.length;
   const today=formatDate(new Date());
-  const todayCnt=all.filter(e=>e.date===today).length;
+  const todayCnt=all.filter(e=>{
+    if(e.endDate && e.endDate>e.date) return e.date<=today && e.endDate>=today;
+    return e.date===today;
+  }).length;
   document.getElementById('statTodayText').textContent=`今日 ${todayCnt} 项`;
-
   document.querySelectorAll('.cal-switch').forEach(el=>{el.classList.toggle('active',el.dataset.cal===filterCal);});
 
   const kw=(document.getElementById('filterKeyword')?.value||'').trim().toLowerCase();
@@ -933,24 +747,13 @@ function render(){
   const rep=document.getElementById('filterRepeat')?.value||'';
   const ad=document.getElementById('filterAllDay')?.value||'';
 
-  let list = filterCal==='all'?all:filterCal==='A'?a:b;
-  if(kw){
-    list=list.filter(e=>(e.title||'').toLowerCase().includes(kw)
-      ||(e.location||'').toLowerCase().includes(kw)
-      ||(e.description||'').toLowerCase().includes(kw));
-  }
-  if(df)list=list.filter(e=>e.date>=df);
+  let list=filterCal==='all'?all:filterCal==='A'?a:b;
+  if(kw)list=list.filter(e=>(e.title||'').toLowerCase().includes(kw)||(e.location||'').toLowerCase().includes(kw)||(e.description||'').toLowerCase().includes(kw));
+  if(df)list=list.filter(e=>(e.endDate||e.date)>=df);
   if(dt)list=list.filter(e=>e.date<=dt);
-  if(rep){
-    list=list.filter(e=>{
-      const r=e.repeat||'none';
-      if(rep==='custom')return r.startsWith('custom:');
-      return r===rep;
-    });
-  }
+  if(rep)list=list.filter(e=>{const r=e.repeat||'none';return rep==='custom'?r.startsWith('custom:'):r===rep;});
   if(ad==='allday')list=list.filter(e=>!!e.allDay);
   else if(ad==='timed')list=list.filter(e=>!e.allDay);
-
   document.getElementById('filterCount').textContent=list.length;
 
   let sub='';
@@ -960,20 +763,15 @@ function render(){
   const activeChips=getActiveChips();
   if(activeChips.length){sub+=` · 已筛选 ${list.length} 条`;}
   document.getElementById('subInfo').textContent=sub;
-
   renderFilterChips(activeChips);
 
-  const rowsBox=document.getElementById('eventRows');
-  const pagBox=document.getElementById('pagination');
+  const rowsBox=document.getElementById('eventRows'),pagBox=document.getElementById('pagination');
   if(!list.length){
     const emptyTip=(all.length && (kw||df||dt||rep||ad||filterCal!=='all'))?'没有符合筛选条件的日程':'暂无日程，点击"新建日程"开始添加';
     rowsBox.innerHTML=`<div class="empty-state"><div class="big">${(kw||df||dt||rep||ad||filterCal!=='all')?'🔍':'📭'}</div><div>${emptyTip}</div>${(kw||df||dt||rep||ad)?'<div style="margin-top:10px;"><button class="filter-reset" onclick="resetFilters()">清除筛选</button></div>':''}</div>`;
-    pagBox.innerHTML='';
-    return;
+    pagBox.innerHTML='';return;
   }
-
-  const total=list.length;
-  _lastFilteredTotal=total;
+  const total=list.length;_lastFilteredTotal=total;
   let totalPages=Math.ceil(total/pageSize);
   if(currentPage>totalPages)currentPage=totalPages;
   if(currentPage<1)currentPage=1;
@@ -986,8 +784,12 @@ function render(){
     const tagColor=e.color||(e.calendarId==='A'?'#3b82f6':'#e11d48');
     const calName=e.calendarId==='A'?'A':'B';
     const time=e.allDay?'全天':(e.startTime?`${e.startTime}${e.endTime?' - '+e.endTime:''}`:'未设置');
+    const isRange=e.endDate && e.endDate>e.date;
+    const dateHtml=isRange
+      ? `${e.date.slice(5)}<span class="w">${w}</span><span class="range">→ ${e.endDate.slice(5)}</span>`
+      : `${e.date.slice(5)}<span class="w">${w}</span>`;
     return `<div class="event-row">
-      <div class="er-date">${e.date.slice(5)}<span class="w">${w}</span></div>
+      <div class="er-date">${dateHtml}</div>
       <div class="er-title">
         <span class="cal-tag" style="background:${tagColor};">${calName}</span>
         <span class="tname">${highlightKw(escapeHtml(e.title),kw)}</span>
@@ -1011,31 +813,20 @@ function highlightKw(text,kw){
   const reg=new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
   return text.replace(reg,m=>`<mark style="background:#fff3a3;color:#1f2329;padding:0 2px;border-radius:2px;">${m}</mark>`);
 }
-
 function renderPagination(total,totalPages){
   const box=document.getElementById('pagination');
   if(!box)return;
   if(totalPages<=1){
-    box.innerHTML=`
-      <div class="page-info">
-        <span>共 <strong>${total}</strong> 条</span>
-        <span class="page-total">|</span>
-        <span>每页
-          <select class="page-size-select" onchange="changePageSize(this.value)">
-            ${PAGE_SIZE_OPTIONS.map(n=>`<option value="${n}" ${n===pageSize?'selected':''}>${n} 条</option>`).join('')}
-          </select>
-        </span>
-      </div>
-      <div class="page-nav"></div>`;
+    box.innerHTML=`<div class="page-info"><span>共 <strong>${total}</strong> 条</span><span style="color:#8a9099;">|</span><span>每页 <select class="page-size-select" onchange="changePageSize(this.value)">${PAGE_SIZE_OPTIONS.map(n=>`<option value="${n}" ${n===pageSize?'selected':''}>${n} 条</option>`).join('')}</select></span></div><div class="page-nav"></div>`;
     return;
   }
   const btns=[];
   btns.push(`<button class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>‹ 上一页</button>`);
   const add=p=>btns.push(`<button class="page-btn${p===currentPage?' active':''}" onclick="goToPage(${p})">${p}</button>`);
   const ellipsis=()=>btns.push(`<span class="page-ellipsis">…</span>`);
-  const p=currentPage, tp=totalPages;
+  const p=currentPage,tp=totalPages;
   add(1);
-  if(tp<=7){ for(let i=2;i<=tp;i++)add(i); }
+  if(tp<=7){for(let i=2;i<=tp;i++)add(i);}
   else{
     if(p>3)ellipsis();
     const s=Math.max(2,p-1),e=Math.min(tp-1,p+1);
@@ -1044,18 +835,13 @@ function renderPagination(total,totalPages){
     add(tp);
   }
   btns.push(`<button class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage>=tp?'disabled':''}>下一页 ›</button>`);
-
   const startItem=(currentPage-1)*pageSize+1;
   const endItem=Math.min(currentPage*pageSize,total);
   box.innerHTML=`
     <div class="page-info">
       <span>第 <strong>${startItem}-${endItem}</strong> 条 / 共 <strong>${total}</strong> 条 · 第 <strong>${currentPage}</strong> / ${totalPages} 页</span>
-      <span class="page-total">|</span>
-      <span>每页
-        <select class="page-size-select" onchange="changePageSize(this.value)">
-          ${PAGE_SIZE_OPTIONS.map(n=>`<option value="${n}" ${n===pageSize?'selected':''}>${n} 条</option>`).join('')}
-        </select>
-      </span>
+      <span style="color:#8a9099;">|</span>
+      <span>每页 <select class="page-size-select" onchange="changePageSize(this.value)">${PAGE_SIZE_OPTIONS.map(n=>`<option value="${n}" ${n===pageSize?'selected':''}>${n} 条</option>`).join('')}</select></span>
     </div>
     <div class="page-nav">
       ${btns.join('')}
@@ -1066,15 +852,14 @@ function goToPage(p){
   const total=filteredTotal();
   const tp=Math.max(1,Math.ceil(total/pageSize));
   if(p<1||p>tp||p===currentPage)return;
-  currentPage=p;
-  render();
+  currentPage=p;render();
   const list=document.querySelector('.event-list');
   if(list)list.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function changePageSize(v){ pageSize=parseInt(v,10)||20; currentPage=1; render(); }
-function jumpPage(input){ const p=parseInt(input.value,10); if(!p||p<1)return; goToPage(p); }
+function changePageSize(v){pageSize=parseInt(v,10)||20;currentPage=1;render();}
+function jumpPage(input){const p=parseInt(input.value,10);if(!p||p<1)return;goToPage(p);}
 let _lastFilteredTotal=0;
-function filteredTotal(){ return _lastFilteredTotal; }
+function filteredTotal(){return _lastFilteredTotal;}
 function getActiveChips(){
   const chips=[];
   if(filterCal==='A')chips.push({k:'cal',label:'日历A'});
@@ -1099,16 +884,16 @@ function renderFilterChips(chips){
   box.innerHTML=`<span>已激活：</span>`+chips.map(c=>`<span class="filter-chip">${escapeHtml(c.label)}<span class="cx" onclick="clearChip('${c.k}')">×</span></span>`).join('')+`<button class="filter-reset" style="margin-left:auto;padding:3px 10px;font-size:12px;" onclick="resetFilters()">全部清除</button>`;
 }
 function clearChip(k){
-  if(k==='cal'){filterCal='all';}
-  else if(k==='kw'){document.getElementById('filterKeyword').value='';}
+  if(k==='cal')filterCal='all';
+  else if(k==='kw')document.getElementById('filterKeyword').value='';
   else if(k==='range'){document.getElementById('filterDateFrom').value='';document.getElementById('filterDateTo').value='';}
-  else if(k==='rep'){document.getElementById('filterRepeat').value='';}
-  else if(k==='ad'){document.getElementById('filterAllDay').value='';}
+  else if(k==='rep')document.getElementById('filterRepeat').value='';
+  else if(k==='ad')document.getElementById('filterAllDay').value='';
   render();
 }
-function onFilterChange(){ currentPage=1; render(); }
+function onFilterChange(){currentPage=1;render();}
 function resetFilters(){
-  filterCal='all'; currentPage=1;
+  filterCal='all';currentPage=1;
   document.getElementById('filterKeyword').value='';
   document.getElementById('filterDateFrom').value='';
   document.getElementById('filterDateTo').value='';
@@ -1119,7 +904,6 @@ function resetFilters(){
 function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function setFilter(c){filterCal=c;currentPage=1;render();}
 
-/* ============ 创建/编辑 ============ */
 function openCreate(){
   editingId=null;
   document.getElementById('editTitle').textContent='新建日程';
@@ -1127,6 +911,7 @@ function openCreate(){
   document.getElementById('evId').value='';
   document.getElementById('evTitle').value='';
   document.getElementById('evDate').value=formatDate(t);
+  document.getElementById('evEndDate').value='';
   document.getElementById('evStart').value='09:00';
   document.getElementById('evEnd').value='10:00';
   document.getElementById('evAllDay').checked=false;
@@ -1153,6 +938,7 @@ function openEdit(id){
   document.getElementById('evId').value=id;
   document.getElementById('evTitle').value=ev.title||'';
   document.getElementById('evDate').value=ev.date||'';
+  document.getElementById('evEndDate').value=ev.endDate||'';
   document.getElementById('evAllDay').checked=!!ev.allDay;
   document.getElementById('evStart').value=ev.startTime||'09:00';
   document.getElementById('evEnd').value=ev.endTime||'10:00';
@@ -1162,26 +948,18 @@ function openEdit(id){
   document.getElementById('evDesc').value=ev.description||'';
   const rep=ev.repeat||'none';
   if(rep.startsWith('custom:')){
-    document.getElementById('evRepeat').value='custom';
-    onRepeatChange();
+    document.getElementById('evRepeat').value='custom';onRepeatChange();
     try{
       const o=JSON.parse(rep.slice(7));
       document.getElementById('crInterval').value=o.interval||2;
       document.getElementById('crUnit').value=o.unit||'week';
-      if(o.endType==='count'){
-        document.querySelector('input[name=crEnd][value=count]').checked=true;
-        document.getElementById('crCount').value=o.count||10;
-      }else if(o.endType==='until'){
-        document.querySelector('input[name=crEnd][value=until]').checked=true;
-        document.getElementById('crUntil').value=o.until||'';
-      }else{
-        document.querySelector('input[name=crEnd][value=never]').checked=true;
-      }
+      if(o.endType==='count'){document.querySelector('input[name=crEnd][value=count]').checked=true;document.getElementById('crCount').value=o.count||10;}
+      else if(o.endType==='until'){document.querySelector('input[name=crEnd][value=until]').checked=true;document.getElementById('crUntil').value=o.until||'';}
+      else document.querySelector('input[name=crEnd][value=never]').checked=true;
       toggleCrEnd();
     }catch(e){}
   }else{
-    document.getElementById('evRepeat').value=rep;
-    onRepeatChange();
+    document.getElementById('evRepeat').value=rep;onRepeatChange();
   }
   selectCal(ev.calendarId||'A');
   selColor=ev.color||(ev.calendarId==='A'?'#3b82f6':'#e11d48');
@@ -1191,15 +969,14 @@ function openEdit(id){
 function selectCal(c){
   selCalInForm=c;
   document.querySelectorAll('.cal-option').forEach(el=>{el.classList.toggle('selected',el.dataset.cal===c);});
-  selColor = c==='A'?'#3b82f6':'#e11d48';
+  selColor=c==='A'?'#3b82f6':'#e11d48';
   renderColorPicker();
 }
 function renderColorPicker(){
   const colors=selCalInForm==='A'?COLORS_A:COLORS_B;
   const box=document.getElementById('colorPicker');
   let html=colors.map(c=>`<div class="color-dot ${c===selColor?'sel':''}" style="background:${c};color:${c};" onclick="pickColor('${c}')"></div>`).join('');
-  if(selCalInForm==='A') html+='<span class="color-tip">商务日程使用统一的商务蓝色</span>';
-  else html+='<span class="color-tip">主题日历可选多种彩色</span>';
+  html+=selCalInForm==='A'?'<span class="color-tip">商务日程使用统一的商务蓝色</span>':'<span class="color-tip">主题日历可选多种彩色</span>';
   box.innerHTML=html;
 }
 function pickColor(c){selColor=c;renderColorPicker();}
@@ -1216,8 +993,7 @@ function setRemindValue(v){
   let exists=false;
   for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===val){exists=true;break;}}
   if(!exists){
-    const opt=document.createElement('option');
-    opt.value=val;
+    const opt=document.createElement('option');opt.value=val;
     const n=Number(val)||0;
     opt.textContent=n===0?'不提醒':(n<60?n+'分钟前':n===60?'1小时前':n===1440?'1天前':Math.round(n/60)+'小时前');
     sel.appendChild(opt);
@@ -1245,23 +1021,21 @@ function buildCustomRepeatValue(){
 async function saveEvent(){
   const title=document.getElementById('evTitle').value.trim();
   const date=document.getElementById('evDate').value;
+  const endDate=document.getElementById('evEndDate').value||'';
   if(!title){toast('请输入日程标题','error');return;}
   if(!date){toast('请选择日期','error');return;}
+  if(endDate && endDate<date){toast('结束日期不能早于开始日期','error');return;}
   const allDay=document.getElementById('evAllDay').checked;
   let repeat=document.getElementById('evRepeat').value;
   if(repeat==='custom')repeat=buildCustomRepeatValue();
   const ev={
-    id:editingId||genId(),
-    calendarId:selCalInForm,
-    title, date,
+    id:editingId||genId(), calendarId:selCalInForm, title, date,
+    endDate:endDate && endDate>date ? endDate : '',
     startTime:allDay?'':document.getElementById('evStart').value,
     endTime:allDay?'':document.getElementById('evEnd').value,
-    allDay,
-    location:document.getElementById('evLocation').value.trim(),
-    repeat,
-    remindBefore:document.getElementById('evRemind').value,
-    description:document.getElementById('evDesc').value.trim(),
-    color:selColor,
+    allDay, location:document.getElementById('evLocation').value.trim(),
+    repeat, remindBefore:document.getElementById('evRemind').value,
+    description:document.getElementById('evDesc').value.trim(), color:selColor,
     createdAt:editingId?(loadEvents().find(e=>e.id===editingId)?.createdAt||Date.now()):Date.now(),
   };
   try{
@@ -1269,67 +1043,32 @@ async function saveEvent(){
     closeModal('modalEdit');
     render();
     toast(editingId?'日程已更新（已同步云端）':'日程已创建（已同步云端）','success');
-  }catch(err){
-    console.error(err);
-    toast('保存失败：'+(err.message||err),'error');
-  }
+  }catch(err){console.error(err);toast('保存失败：'+(err.message||err),'error');}
 }
 async function delEvent(id){
   if(!confirm('确定删除此日程？'))return;
-  try{
-    await deleteEventCloud(id);
-    render();
-    toast('已删除','info');
-  }catch(err){
-    console.error(err);
-    toast('删除失败：'+(err.message||err),'error');
-  }
+  try{await deleteEventCloud(id);render();toast('已删除','info');}
+  catch(err){console.error(err);toast('删除失败：'+(err.message||err),'error');}
 }
 async function clearAll(){
   const n=loadEvents().length;
   if(!n){toast('当前没有日程','info');return;}
   if(!confirm(`确定清空全部 ${n} 条日程？此操作不可恢复。`))return;
-  try{
-    await clearAllEventsCloud();
-    render();
-    toast('已清空全部日程','info');
-  }catch(err){
-    console.error(err);
-    toast('清空失败：'+(err.message||err),'error');
-  }
+  try{await clearAllEventsCloud();render();toast('已清空全部日程','info');}
+  catch(err){console.error(err);toast('清空失败：'+(err.message||err),'error');}
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-/* ============ 教学周设置 ============ */
-const DEFAULT_PERIODS = [
-  {s:'08:00',e:'08:45'},{s:'08:50',e:'09:35'},{s:'09:50',e:'10:35'},{s:'10:40',e:'11:25'},
-  {s:'13:30',e:'14:15'},{s:'14:20',e:'15:05'},{s:'15:20',e:'16:05'},{s:'16:10',e:'16:55'},
-  {s:'18:30',e:'19:15'},{s:'19:20',e:'20:05'},{s:'20:10',e:'20:55'},{s:'21:00',e:'21:45'}
-];
+const DEFAULT_PERIODS=[{s:'08:00',e:'08:45'},{s:'08:50',e:'09:35'},{s:'09:50',e:'10:35'},{s:'10:40',e:'11:25'},{s:'13:30',e:'14:15'},{s:'14:20',e:'15:05'},{s:'15:20',e:'16:05'},{s:'16:10',e:'16:55'},{s:'18:30',e:'19:15'},{s:'19:20',e:'20:05'},{s:'20:10',e:'20:55'},{s:'21:00',e:'21:45'}];
 function ymdIndex(y,m,d){return Math.round(new Date(y,m-1,d).getTime()/86400000);}
-function parseYMDText(s){
-  const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  return m?{y:+m[1],m:+m[2],d:+m[3]}:null;
-}
-function termDateOf(startStr,week,offset){
-  const sd=parseYMDText(startStr);
-  if(!sd)return '';
-  const t=new Date(sd.y,sd.m-1,sd.d);
-  t.setDate(t.getDate()+(week-1)*7+offset);
-  return formatDate(t);
-}
+function parseYMDText(s){const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);return m?{y:+m[1],m:+m[2],d:+m[3]}:null;}
+function termDateOf(startStr,week,offset){const sd=parseYMDText(startStr);if(!sd)return'';const t=new Date(sd.y,sd.m-1,sd.d);t.setDate(t.getDate()+(week-1)*7+offset);return formatDate(t);}
 function renderPeriodGrid(periods){
   const list=(periods&&periods.length)?periods:DEFAULT_PERIODS;
-  const box=document.getElementById('periodGrid');
-  let html='';
+  const box=document.getElementById('periodGrid');let html='';
   for(let i=0;i<DEFAULT_PERIODS.length;i++){
     const p=list[i]||DEFAULT_PERIODS[i];
-    html+=`<div class="period-item">
-      <span class="pn">第${i+1}节</span>
-      <input type="time" data-i="${i}" data-k="s" value="${p.s||''}">
-      <span style="color:#c9cdd4;">~</span>
-      <input type="time" data-i="${i}" data-k="e" value="${p.e||''}">
-    </div>`;
+    html+=`<div class="period-item"><span class="pn">第${i+1}节</span><input type="time" data-i="${i}" data-k="s" value="${p.s||''}"><span style="color:#c9cdd4;">~</span><input type="time" data-i="${i}" data-k="e" value="${p.e||''}"></div>`;
   }
   box.innerHTML=html;
 }
@@ -1344,13 +1083,12 @@ function collectPeriods(){
 function onTermInput(){renderTermInfo();}
 function renderTermInfo(){
   const box=document.getElementById('termInfo');
-  const s=document.getElementById('termStart').value;
-  const e=document.getElementById('termEnd').value;
+  const s=document.getElementById('termStart').value,e=document.getElementById('termEnd').value;
   if(!s||!e){box.className='term-info warn';box.innerHTML='<b>请填写教学周的开始与结束日期</b><div style="margin-top:2px;">填写后课表导入才能把「周次」换算成具体日期。</div>';return;}
   const sd=parseYMDText(s),ed=parseYMDText(e);
   if(!sd||!ed){box.className='term-info warn';box.innerHTML='<b>日期格式不正确</b>';return;}
   const diff=ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d);
-  if(diff<0){box.className='term-info warn';box.innerHTML='<b>结束日期早于开始日期</b><div style="margin-top:2px;">请重新填写。</div>';return;}
+  if(diff<0){box.className='term-info warn';box.innerHTML='<b>结束日期早于开始日期</b>';return;}
   const total=Math.floor(diff/7)+1;
   const wd=new Date(sd.y,sd.m-1,sd.d).getDay();
   const wdName=['周日','周一','周二','周三','周四','周五','周六'][wd];
@@ -1361,12 +1099,9 @@ function renderTermInfo(){
   else if(cur>total)nowTxt='当前状态：已结束（假期中）';
   else nowTxt=`当前状态：第 ${cur} 教学周`;
   let extra='';
-  if(wd!==1)extra=`<div style="margin-top:2px;color:#ad6800;">提示：开始日期是${wdName}而非周一，课表将按该日期起算第 1 周，建议改为周一以免日期错位。</div>`;
+  if(wd!==1)extra=`<div style="margin-top:2px;color:#ad6800;">提示：开始日期是${wdName}而非周一，建议改为周一以免日期错位。</div>`;
   box.className='term-info';
-  box.innerHTML=`<b>共 ${total} 个教学周</b>
-    <div style="margin-top:2px;">第 1 周起始：${s}（${wdName}）　第 ${total} 周结束：${e}</div>
-    <div style="margin-top:2px;">起止跨度 ${diff+1} 天</div>
-    <div class="term-now">${nowTxt}</div>${extra}`;
+  box.innerHTML=`<b>共 ${total} 个教学周</b><div style="margin-top:2px;">第 1 周起始：${s}（${wdName}）　第 ${total} 周结束：${e}</div><div style="margin-top:2px;">起止跨度 ${diff+1} 天</div><div class="term-now">${nowTxt}</div>${extra}`;
 }
 function openTermSetting(){
   const t=loadTerm();
@@ -1378,33 +1113,24 @@ function openTermSetting(){
 }
 function resetPeriods(){renderPeriodGrid(DEFAULT_PERIODS);toast('已恢复默认作息时间','info');}
 async function saveTermSetting(){
-  const s=document.getElementById('termStart').value;
-  const e=document.getElementById('termEnd').value;
+  const s=document.getElementById('termStart').value,e=document.getElementById('termEnd').value;
   if(!s||!e){toast('请填写教学周的开始与结束日期','error');return;}
   const sd=parseYMDText(s),ed=parseYMDText(e);
   if(!sd||!ed||ymdIndex(ed.y,ed.m,ed.d)<ymdIndex(sd.y,sd.m,sd.d)){toast('日期填写有误，请检查','error');return;}
   const data={startDate:s,endDate:e,periods:collectPeriods(),updatedAt:Date.now()};
-  try{
-    await saveSettingCloud('term', data);
-    closeModal('modalTerm');
+  try{await saveSettingCloud('term',data);closeModal('modalTerm');
     const total=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
     toast(`教学周已保存：共 ${total} 周`,'success');
-  }catch(err){
-    console.error(err);
-    toast('保存失败：'+(err.message||err),'error');
-  }
+  }catch(err){console.error(err);toast('保存失败：'+(err.message||err),'error');}
 }
 
-/* ============ 模板下载 ============ */
 function downloadTemplate(){
-  const today=formatDate(new Date());
-  const tmr=formatDate(new Date(Date.now()+86400000));
+  const today=formatDate(new Date()),tmr=formatDate(new Date(Date.now()+86400000));
   const data=[
     ['归属日历','标题','日期','开始时间','结束时间','地点','重复','提醒','描述'],
     ['A','团队早会',today,'09:00','09:30','会议室A','workday','15','本周工作同步早会'],
     ['A','项目评审会议',tmr,'14:00','16:00','大会议室','none','30','Q4需求评审'],
     ['B','晨跑锻炼',today,'07:00','07:45','城市公园','weekly','10','每周固定锻炼'],
-    ['B','下午茶时光',tmr,'15:30','16:00','咖啡厅','none','0','放松一下'],
     ['※','说明：归属日历列填 A 或 B（留空默认 A）','','','','','','',''],
     ['※','说明：日期格式 YYYY-MM-DD','','','','','','',''],
     ['※','说明：开始时间 HH:MM，留空表示全天日程','','','','','','',''],
@@ -1413,25 +1139,20 @@ function downloadTemplate(){
   ];
   const ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[{wch:10},{wch:20},{wch:14},{wch:10},{wch:10},{wch:16},{wch:10},{wch:8},{wch:30}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'日程导入模板');
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'日程导入模板');
   XLSX.writeFile(wb,'日历导入模板.xlsx');
-  toast('模板已下载，请按模板填写后上传','success');
+  toast('模板已下载','success');
 }
 
-/* ============ 表格导入 ============ */
-let lastFile=null;
-let lastEncoding='';
+let lastFile=null,lastEncoding='';
 function openImport(){
-  parsedImportRows=[];
-  importMode='standard';
+  parsedImportRows=[];importMode='standard';
   document.getElementById('importPreview').style.display='none';
   document.getElementById('importPreview').innerHTML='';
   document.getElementById('importResult').innerHTML='';
   document.getElementById('btnConfirmImport').disabled=true;
   document.getElementById('fileInput').value='';
-  lastFile=null;
-  lastEncoding='';
+  lastFile=null;lastEncoding='';
   document.getElementById('modalImport').classList.add('show');
 }
 function setupDrop(){
@@ -1442,23 +1163,18 @@ function setupDrop(){
   document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files.length)handleFile(e.target.files[0]);});
 }
 function handleFile(file){
-  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){showImportResult('文件格式不支持，请上传 .xlsx / .xls / .csv 文件',true);return;}
-  lastFile=file;
-  showImportResult('正在解析表格…',false);
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){showImportResult('文件格式不支持',true);return;}
+  lastFile=file;showImportResult('正在解析表格…',false);
   const isCsv=/\.csv$/i.test(file.name);
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const data=new Uint8Array(e.target.result);
-      let wb;
+      const data=new Uint8Array(e.target.result);let wb;
       if(isCsv){
         const dec=decodeTextBytes(data,document.getElementById('fileEncoding').value);
         lastEncoding=dec.enc;
         wb=XLSX.read(dec.text,{type:'string',raw:true});
-      }else{
-        lastEncoding='';
-        wb=XLSX.read(data,{type:'array',raw:true});
-      }
+      }else{lastEncoding='';wb=XLSX.read(data,{type:'array',raw:true});}
       const sheet=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
       parseRows(rows);
@@ -1466,23 +1182,19 @@ function handleFile(file){
   };
   reader.readAsArrayBuffer(file);
 }
-function onEncodingChange(){ if(lastFile)handleFile(lastFile); }
+function onEncodingChange(){if(lastFile)handleFile(lastFile);}
 function decodeTextBytes(u8,force){
   const mode=String(force||'auto').toLowerCase();
-  const useGBK=()=>{try{return {text:new TextDecoder('gb18030').decode(u8),enc:'GBK/GB18030'};}
-    catch(e){return {text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8'};}};
+  const useGBK=()=>{try{return {text:new TextDecoder('gb18030').decode(u8),enc:'GBK/GB18030'};}catch(e){return {text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8'};}};
   const useUTF8=()=>({text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8'});
   if(mode==='gbk')return useGBK();
   if(mode==='utf-8'||mode==='utf8')return useUTF8();
-  if(u8.length>=3&&u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF)
-    return {text:new TextDecoder('utf-8').decode(u8.subarray(3)),enc:'UTF-8（含 BOM）'};
-  if(u8.length>=2&&u8[0]===0xFF&&u8[1]===0xFE)
-    return {text:new TextDecoder('utf-16le').decode(u8.subarray(2)),enc:'UTF-16LE（含 BOM）'};
-  if(u8.length>=2&&u8[0]===0xFE&&u8[1]===0xFF)
-    return {text:new TextDecoder('utf-16be').decode(u8.subarray(2)),enc:'UTF-16BE（含 BOM）'};
+  if(u8.length>=3&&u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF)return {text:new TextDecoder('utf-8').decode(u8.subarray(3)),enc:'UTF-8（含 BOM）'};
+  if(u8.length>=2&&u8[0]===0xFF&&u8[1]===0xFE)return {text:new TextDecoder('utf-16le').decode(u8.subarray(2)),enc:'UTF-16LE'};
+  if(u8.length>=2&&u8[0]===0xFE&&u8[1]===0xFF)return {text:new TextDecoder('utf-16be').decode(u8.subarray(2)),enc:'UTF-16BE'};
   let ascii=true;
   for(let i=0;i<u8.length;i++){if(u8[i]>=0x80){ascii=false;break;}}
-  if(ascii)return {text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8（纯英文）'};
+  if(ascii)return {text:new TextDecoder('utf-8').decode(u8),enc:'UTF-8'};
   try{return {text:new TextDecoder('utf-8',{fatal:true}).decode(u8),enc:'UTF-8'};}catch(e){}
   return useGBK();
 }
@@ -1499,46 +1211,37 @@ function isValidYMD(y,m,d){
 }
 function normalizeDate(v){
   if(v==null||v==='')return'';
-  if(v instanceof Date){return isNaN(v.getTime())?'':formatDate(v);}
+  if(v instanceof Date)return isNaN(v.getTime())?'':formatDate(v);
   if(typeof v==='number'&&isFinite(v)&&v>=1&&v<=2958465){
-    try{
-      const o=XLSX.SSF.parse_date_code(v);
+    try{const o=XLSX.SSF.parse_date_code(v);
       if(o&&o.y)return isValidYMD(o.y,o.m,o.d)?`${o.y}-${String(o.m).padStart(2,'0')}-${String(o.d).padStart(2,'0')}`:'';
     }catch(e){}
     return'';
   }
-  let s=String(v).trim();
-  s=s.replace(/[./]/g,'-');
+  let s=String(v).trim().replace(/[./]/g,'-');
   const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(m){return isValidYMD(m[1],m[2],m[3])?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
+  if(m)return isValidYMD(m[1],m[2],m[3])?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';
   const m2=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if(m2){return isValidYMD(m2[3],m2[1],m2[2])?`${m2[3]}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`:'';}
+  if(m2)return isValidYMD(m2[3],m2[1],m2[2])?`${m2[3]}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`:'';
   const m3=s.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
-  if(m3){
-    const yy=Number(m3[3]);
-    const full=yy<=29?2000+yy:1900+yy;
-    return isValidYMD(full,m3[1],m3[2])?`${full}-${m3[1].padStart(2,'0')}-${m3[2].padStart(2,'0')}`:'';
-  }
+  if(m3){const yy=Number(m3[3]),full=yy<=29?2000+yy:1900+yy;return isValidYMD(full,m3[1],m3[2])?`${full}-${m3[1].padStart(2,'0')}-${m3[2].padStart(2,'0')}`:'';}
   return'';
 }
 function normalizeTime(v){
   if(!v)return'';
-  let s=String(v).trim();
-  const m=s.match(/(\d{1,2}):(\d{2})/);
-  if(m){return `${m[1].padStart(2,'0')}:${m[2]}`;}
+  const m=String(v).trim().match(/(\d{1,2}):(\d{2})/);
+  if(m)return `${m[1].padStart(2,'0')}:${m[2]}`;
   return'';
 }
 function parseRows(rows){
   if(!rows.length){showImportResult('表格为空',true);return;}
   if(isTimetableHeader(rows[0])){parseTimetable(rows);return;}
   importMode='standard';
-  const body=rows.slice(1);
-  const parsed=[];
+  const body=rows.slice(1),parsed=[];
   const validRepeats=['none','daily','workday','weekly','monthly','yearly','custom'];
   body.forEach((r,i)=>{
     if(!r||!r.length||r.every(c=>!String(c).trim()))return;
-    const c0=String(r[0]==null?'':r[0]).trim();
-    const c1=String(r[1]==null?'':r[1]).trim();
+    const c0=String(r[0]==null?'':r[0]).trim(),c1=String(r[1]==null?'':r[1]).trim();
     if(!c0&&!c1)return;
     if(c0==='※'||c0.indexOf('说明')===0||c1.indexOf('说明')===0)return;
     const cal=String(r[0]||'A').trim().toUpperCase();
@@ -1553,19 +1256,12 @@ function parseRows(rows){
     const rowNo=i+2;
     const validCal=['A','B'].includes(cal)?cal:'A';
     const validRepeat=validRepeats.includes(repeat)?repeat:'none';
-    parsed.push({
-      calendarId:validCal,title,date,startTime,endTime,location,
-      repeat:validRepeat,remindBefore:remind,description:desc,
-      allDay:!startTime,
-      color:validCal==='A'?'#3b82f6':'#e11d48',
-      _err:!title||!date, _rowNo:rowNo,
-    });
+    parsed.push({calendarId:validCal,title,date,startTime,endTime,location,repeat:validRepeat,remindBefore:remind,description:desc,
+      allDay:!startTime,color:validCal==='A'?'#3b82f6':'#e11d48',_err:!title||!date,_rowNo:rowNo});
   });
   parsedImportRows=parsed;
-  const box=document.getElementById('importPreview');
-  box.style.display='block';
-  const validCnt=parsed.filter(p=>!p._err).length;
-  const errCnt=parsed.filter(p=>p._err).length;
+  const box=document.getElementById('importPreview');box.style.display='block';
+  const validCnt=parsed.filter(p=>!p._err).length,errCnt=parsed.filter(p=>p._err).length;
   let html=`<table><thead><tr><th>行</th><th>日历</th><th>标题</th><th>日期</th><th>时间</th><th>地点</th><th>重复</th><th>状态</th></tr></thead><tbody>`;
   parsed.forEach(p=>{
     html+=`<tr class="${p._err?'err':''}"><td>${p._rowNo}</td><td>${p.calendarId}</td>
@@ -1575,8 +1271,7 @@ function parseRows(rows){
       <td>${escapeHtml(p.location)}</td><td>${repeatLabel(p.repeat)}</td>
       <td>${p._err?'❌ 跳过':'✅ 有效'}</td></tr>`;
   });
-  html+='</tbody></table>';
-  box.innerHTML=html;
+  html+='</tbody></table>';box.innerHTML=html;
   document.getElementById('btnConfirmImport').disabled=validCnt===0;
   showImportResult(`解析完成${lastEncoding?`（文件编码：${lastEncoding}）`:''}：共识别 ${parsed.length} 条，有效 ${validCnt} 条${errCnt?`，${errCnt} 条将被跳过`:''}`,errCnt>0&&validCnt===0);
 }
@@ -1588,18 +1283,10 @@ function buildTimetableCols(header){
   const h=(header||[]).map(x=>String(x==null?'':x).trim());
   const find=function(){
     const names=Array.prototype.slice.call(arguments);
-    for(let i=0;i<h.length;i++){
-      for(let j=0;j<names.length;j++){
-        if(h[i]&&(h[i]===names[j]||h[i].indexOf(names[j])>=0))return i;
-      }
-    }
+    for(let i=0;i<h.length;i++)for(let j=0;j<names.length;j++)if(h[i]&&(h[i]===names[j]||h[i].indexOf(names[j])>=0))return i;
     return -1;
   };
-  return {
-    weekday:find('星期','周几'), weeks:find('周次'), period:find('节次'),
-    loc:find('上课地点','地点','教室'), cls:find('授课班级','班级'), num:find('人数'),
-    course:find('课程名称','课程'), teacher:find('任课教师','教师'), type:find('学时分类','分类','课程类型')
-  };
+  return {weekday:find('星期','周几'),weeks:find('周次'),period:find('节次'),loc:find('上课地点','地点','教室'),cls:find('授课班级','班级'),num:find('人数'),course:find('课程名称','课程'),teacher:find('任课教师','教师'),type:find('学时分类','分类','课程类型')};
 }
 const WD_OFFSET={'星期一':0,'周一':0,'一':0,'星期二':1,'周二':1,'二':1,'星期三':2,'周三':2,'三':2,'星期四':3,'周四':3,'四':3,'星期五':4,'周五':4,'五':4,'星期六':5,'周六':5,'六':5,'星期日':6,'星期天':6,'周日':6,'周天':6,'日':6,'天':6};
 function parseWeekList(str){
@@ -1609,12 +1296,7 @@ function parseWeekList(str){
   s.split(/[,，、;；]/).forEach(seg=>{
     if(!seg)return;
     const m=seg.match(/^(\d+)\s*[-~—－]\s*(\d+)$/);
-    if(m){
-      let a=parseInt(m[1],10),b=parseInt(m[2],10);
-      if(a>b){const t=a;a=b;b=t;}
-      for(let i=a;i<=b&&i<=60;i++)out.push(i);
-      return;
-    }
+    if(m){let a=parseInt(m[1],10),b=parseInt(m[2],10);if(a>b){const t=a;a=b;b=t;}for(let i=a;i<=b&&i<=60;i++)out.push(i);return;}
     const m2=seg.match(/^(\d+)$/);
     if(m2){const n=parseInt(m2[1],10);if(n>=1&&n<=60)out.push(n);}
   });
@@ -1636,17 +1318,13 @@ function periodRangeToTime(range,periods){
   return {start:sNode.s||'',end:eNode.e||sNode.s||''};
 }
 function colorOfCourse(name){
-  const s=String(name||'');
-  let h=0;
+  const s=String(name||'');let h=0;
   for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;
   return COLORS_B[h%COLORS_B.length];
 }
 function showTimetablePreview(parsed,note){
-  const box=document.getElementById('importPreview');
-  box.style.display='block';
-  const validCnt=parsed.filter(p=>!p._err).length;
-  const errCnt=parsed.length-validCnt;
-  const MAX=300;
+  const box=document.getElementById('importPreview');box.style.display='block';
+  const validCnt=parsed.filter(p=>!p._err).length,errCnt=parsed.length-validCnt,MAX=300;
   let html='<table><thead><tr><th>#</th><th>周次</th><th>日期</th><th>时间</th><th>课程</th><th>地点</th><th>状态</th></tr></thead><tbody>';
   parsed.slice(0,MAX).forEach((p,n)=>{
     html+=`<tr class="${p._err?'err':''}"><td>${n+1}</td>
@@ -1657,46 +1335,33 @@ function showTimetablePreview(parsed,note){
       <td>${escapeHtml(p.location||'—')}</td>
       <td>${p._err?'❌ 跳过':'✅ 有效'}</td></tr>`;
   });
-  html+='</tbody></table>';
-  box.innerHTML=html;
+  html+='</tbody></table>';box.innerHTML=html;
   document.getElementById('btnConfirmImport').disabled=validCnt===0;
   let msg=`已识别为「一维课表」，全部归入<b>日历B</b>：共生成 ${parsed.length} 条日程，有效 ${validCnt} 条`;
   if(errCnt)msg+=`，${errCnt} 条将被跳过`;
   if(parsed.length>MAX)msg+=`（预览仅显示前 ${MAX} 条）`;
   if(note)msg+='<br>'+note;
-  msg+='<br><span style="font-size:12px;opacity:.85;">提示：导入为追加方式；如为同一份课表重复导入，请先清空日历B中以往导入的课程。</span>';
   showImportResult(msg,validCnt===0);
 }
 function parseTimetable(rows){
-  importMode='timetable';
-  parsedImportRows=[];
+  importMode='timetable';parsedImportRows=[];
   const cols=buildTimetableCols(rows[0]);
   document.getElementById('importPreview').style.display='none';
   document.getElementById('importPreview').innerHTML='';
   document.getElementById('btnConfirmImport').disabled=true;
-  if(cols.weekday<0||cols.weeks<0){
-    showImportResult('已识别为课表格式，但未找到「星期」或「周次」列，请检查表头是否正确',true);
-    return;
-  }
+  if(cols.weekday<0||cols.weeks<0){showImportResult('已识别为课表格式，但未找到「星期」或「周次」列',true);return;}
   const term=loadTerm();
-  if(!term||!term.startDate||!term.endDate){
-    showImportResult('已识别为「一维课表」格式，但尚未设定教学周：请先点击左侧「🎓 教学周设置」填写教学周的开始与结束日期，再重新上传本文件。',true);
-    return;
-  }
-  const sd=parseYMDText(term.startDate);
-  const ed=parseYMDText(term.endDate);
+  if(!term||!term.startDate||!term.endDate){showImportResult('已识别为课表，请先设定教学周',true);return;}
+  const sd=parseYMDText(term.startDate),ed=parseYMDText(term.endDate);
   const totalWeeks=Math.floor((ymdIndex(ed.y,ed.m,ed.d)-ymdIndex(sd.y,sd.m,sd.d))/7)+1;
   const periods=(term.periods&&term.periods.length)?term.periods:DEFAULT_PERIODS;
-  const parsed=[];
-  let curWeekday='';
-  let overRange=0;
+  const parsed=[];let curWeekday='',overRange=0;
   rows.slice(1).forEach(r=>{
     if(!r||!r.length||r.every(c=>!String(c==null?'':c).trim()))return;
     const wdRaw=cols.weekday>=0?String(r[cols.weekday]==null?'':r[cols.weekday]).trim():'';
     if(wdRaw)curWeekday=wdRaw;
     if(!curWeekday)return;
-    const offset=WD_OFFSET[curWeekday];
-    if(offset==null)return;
+    const offset=WD_OFFSET[curWeekday];if(offset==null)return;
     const weeksRaw=String(r[cols.weeks]==null?'':r[cols.weeks]).trim();
     const periodRaw=String(cols.period>=0&&r[cols.period]!=null?r[cols.period]:'').trim();
     const course=String(cols.course>=0&&r[cols.course]!=null?r[cols.course]:'').trim();
@@ -1704,13 +1369,10 @@ function parseTimetable(rows){
     const cls=String(cols.cls>=0&&r[cols.cls]!=null?r[cols.cls]:'').trim();
     const teacher=String(cols.teacher>=0&&r[cols.teacher]!=null?r[cols.teacher]:'').trim();
     const type=String(cols.type>=0&&r[cols.type]!=null?r[cols.type]:'').trim();
-    let periodText=periodRaw;
-    let oddEven='';
-    if(periodRaw.indexOf('单周')>=0)oddEven='odd';
-    else if(periodRaw.indexOf('双周')>=0)oddEven='even';
+    let periodText=periodRaw,oddEven='';
+    if(periodRaw.indexOf('单周')>=0)oddEven='odd';else if(periodRaw.indexOf('双周')>=0)oddEven='even';
     const bm=weeksRaw.match(/\[([^\]]+)\]/);
-    if(oddEven&&bm)periodText=bm[1];
-    else if(!periodText&&bm)periodText=bm[1];
+    if(oddEven&&bm)periodText=bm[1];else if(!periodText&&bm)periodText=bm[1];
     let weeks=parseWeekList(weeksRaw);
     if(oddEven==='odd')weeks=weeks.filter(w=>w%2===1);
     if(oddEven==='even')weeks=weeks.filter(w=>w%2===0);
@@ -1718,28 +1380,21 @@ function parseTimetable(rows){
     const time=periodRangeToTime(range,periods);
     const timeLabel=time.start?(time.start+(time.end?' - '+time.end:'')):'全天';
     const title=course||'（未命名课程）';
-    const descParts=[];
-    if(cls)descParts.push(cls);
-    if(teacher)descParts.push(teacher);
-    if(type)descParts.push(type);
+    const descParts=[];if(cls)descParts.push(cls);if(teacher)descParts.push(teacher);if(type)descParts.push(type);
     const desc=descParts.join(' · ');
     if(!weeks.length||!range){
-      parsed.push({calendarId:'B',title:title,date:'',startTime:time.start,endTime:time.end,location:loc,
-        repeat:'none',remindBefore:'15',description:desc,color:colorOfCourse(title),allDay:!time.start,
-        _err:true,_week:'—',_wdOffset:offset,_timeLabel:timeLabel});
+      parsed.push({calendarId:'B',title:title,date:'',startTime:time.start,endTime:time.end,location:loc,repeat:'none',remindBefore:'15',description:desc,color:colorOfCourse(title),allDay:!time.start,_err:true,_week:'—',_wdOffset:offset,_timeLabel:timeLabel});
       return;
     }
     weeks.forEach(w=>{
       const date=termDateOf(term.startDate,w,offset);
       if(w>totalWeeks)overRange++;
-      parsed.push({calendarId:'B',title:title,date:date,startTime:time.start,endTime:time.end,location:loc,
-        repeat:'none',remindBefore:'15',description:desc,color:colorOfCourse(title),allDay:!time.start,
-        _err:!date,_week:w,_wdOffset:offset,_timeLabel:timeLabel});
+      parsed.push({calendarId:'B',title:title,date:date,startTime:time.start,endTime:time.end,location:loc,repeat:'none',remindBefore:'15',description:desc,color:colorOfCourse(title),allDay:!time.start,_err:!date,_week:w,_wdOffset:offset,_timeLabel:timeLabel});
     });
   });
   parsedImportRows=parsed;
   let note='';
-  if(overRange)note=`其中 ${overRange} 条课程的周次超出教学周区间，已按推算日期一并导入。`;
+  if(overRange)note=`其中 ${overRange} 条课程周次超出教学周区间，已按推算日期一并导入。`;
   showTimetablePreview(parsed,note);
 }
 function showImportResult(msg,isErr){
@@ -1747,80 +1402,80 @@ function showImportResult(msg,isErr){
 }
 async function confirmImport(){
   const valid=parsedImportRows.filter(p=>!p._err).map(p=>({
-    id:genId(),calendarId:p.calendarId,title:p.title,date:p.date,
+    id:genId(),calendarId:p.calendarId,title:p.title,date:p.date,endDate:'',
     startTime:p.startTime,endTime:p.endTime,allDay:p.allDay,location:p.location,
-    repeat:p.repeat,remindBefore:p.remindBefore,description:p.description,color:p.color,
-    createdAt:Date.now(),
+    repeat:p.repeat,remindBefore:p.remindBefore,description:p.description,color:p.color,createdAt:Date.now(),
   }));
   if(!valid.length)return;
-  try{
-    await bulkInsertEventsCloud(valid);
-    closeModal('modalImport');
-    render();
-    toast(`成功导入 ${valid.length} 条日程（已同步云端）`,'success');
-  }catch(err){
-    console.error(err);
-    toast('导入失败：'+(err.message||err),'error');
-  }
+  try{await bulkInsertEventsCloud(valid);closeModal('modalImport');render();toast(`成功导入 ${valid.length} 条日程`,'success');}
+  catch(err){console.error(err);toast('导入失败：'+(err.message||err),'error');}
 }
 
-/* ============ 展示页美化 ============ */
-const TOPBAR_PRESETS = [
-  {label:'深空蓝（默认）', v:'linear-gradient(90deg,#0f2027,#203a43,#2c5364)'},
-  {label:'商务蓝',         v:'linear-gradient(90deg,#0052d9,#0069ff)'},
-  {label:'星夜紫',         v:'linear-gradient(90deg,#41295a,#2F0743)'},
-  {label:'森野绿',         v:'linear-gradient(90deg,#134e5e,#71b280)'},
-  {label:'蔷薇红',         v:'linear-gradient(90deg,#6a11cb,#fc5c7d)'},
-  {label:'墨黑极简',       v:'#1a1a1a'},
+const TOPBAR_PRESETS=[
+  {label:'深空蓝（默认）',v:'linear-gradient(90deg,#0f2027,#203a43,#2c5364)'},
+  {label:'商务蓝',v:'linear-gradient(90deg,#0052d9,#0069ff)'},
+  {label:'星夜紫',v:'linear-gradient(90deg,#41295a,#2F0743)'},
+  {label:'森野绿',v:'linear-gradient(90deg,#134e5e,#71b280)'},
+  {label:'蔷薇红',v:'linear-gradient(90deg,#6a11cb,#fc5c7d)'},
+  {label:'墨黑极简',v:'#1a1a1a'},
 ];
-const PAGE_PRESETS = [
-  {label:'浅灰（默认）', v:'#f0f2f5'},
-  {label:'纯白',         v:'#ffffff'},
-  {label:'淡蓝渐变',     v:'linear-gradient(180deg,#eef4ff,#f7f9fc)'},
-  {label:'暖米色',       v:'#faf7f2'},
+const PAGE_PRESETS=[
+  {label:'浅灰（默认）',v:'#f0f2f5'},
+  {label:'纯白',v:'#ffffff'},
+  {label:'淡蓝渐变',v:'linear-gradient(180deg,#eef4ff,#f7f9fc)'},
+  {label:'暖米色',v:'#faf7f2'},
 ];
-const DAY_DEFAULTS = [
-  {name:'周日', color:'#f59e0b'},
-  {name:'周一', color:'#2563eb'},
-  {name:'周二', color:'#ea580c'},
-  {name:'周三', color:'#16a34a'},
-  {name:'周四', color:'#7c3aed'},
-  {name:'周五', color:'#e11d48'},
-  {name:'周六', color:'#0284c7'},
+const DAY_DEFAULTS=[
+  {name:'周日',color:'#f59e0b'},{name:'周一',color:'#2563eb'},{name:'周二',color:'#ea580c'},
+  {name:'周三',color:'#16a34a'},{name:'周四',color:'#7c3aed'},{name:'周五',color:'#e11d48'},{name:'周六',color:'#0284c7'},
 ];
-const DISPLAY_DEFAULTS = {
+const LOADER_BG_PRESETS=[
+  {label:'深空蓝（默认）',bg:'linear-gradient(135deg,#1e3c72 0%,#2a5298 50%,#7e57c2 100%)'},
+  {label:'星夜',bg:'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'},
+  {label:'暖阳',bg:'linear-gradient(135deg,#ff7e5f,#feb47b)'},
+  {label:'海洋',bg:'linear-gradient(135deg,#2193b0,#6dd5ed)'},
+  {label:'森林',bg:'linear-gradient(135deg,#134e5e,#71b280)'},
+  {label:'玫瑰',bg:'linear-gradient(135deg,#ec4899,#f43f5e)'},
+  {label:'纯黑',bg:'#0a0a0a'},
+];
+const DISPLAY_DEFAULTS={
   siteTitle:'日历展示中心',
   topbarBg:'linear-gradient(90deg,#0f2027,#203a43,#2c5364)',
   pageBg:'#f0f2f5',
   accentA:'#3b82f6',
   accentB:'#e11d48',
   radius:16,
+  loaderStyle:'ring',
+  loaderBg:'linear-gradient(135deg,#1e3c72 0%,#2a5298 50%,#7e57c2 100%)',
+  loaderText:'CALENDAR',
+  loaderSub:'正在加载日历数据…',
   loaderMs:1400,
-  showBigCalendar:true,
-  showCalA:true,
-  showCalB:true,
-  showTermBadge:true,
-  showBrandDot:true,
+  showBigCalendar:true, showCalA:true, showCalB:true, showTermBadge:true, showBrandDot:true,
   themes:[]
 };
-let tpTopbarVal = '';
-let tpBgVal = '';
+let tpTopbarVal='', tpBgVal='', tpLoaderBg='';
 
 function openTheme(){
   const t=loadDisplayTheme();
   document.getElementById('tpTitle').value=t.siteTitle||DISPLAY_DEFAULTS.siteTitle;
   tpTopbarVal=t.topbarBg||DISPLAY_DEFAULTS.topbarBg;
   tpBgVal=t.pageBg||DISPLAY_DEFAULTS.pageBg;
+  tpLoaderBg=t.loaderBg||DISPLAY_DEFAULTS.loaderBg;
   document.getElementById('tpTopbarCustom').value=tpTopbarVal;
   document.getElementById('tpBgCustom').value=tpBgVal;
+  document.getElementById('tpLoaderBgCustom').value=tpLoaderBg;
   renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
   renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
+  renderLoaderBgSwatches(tpLoaderBg);
   document.getElementById('tpAccentA').value=/^#[0-9a-f]{6}$/i.test(t.accentA||'')?t.accentA:'#3b82f6';
   document.getElementById('tpAccentB').value=/^#[0-9a-f]{6}$/i.test(t.accentB||'')?t.accentB:'#e11d48';
   const r=(t.radius!=null?t.radius:16);
   document.getElementById('tpRadius').value=r;
   document.getElementById('tpRadiusVal').textContent=r+'px';
   document.getElementById('tpLoader').value=String(t.loaderMs!=null?t.loaderMs:1400);
+  document.getElementById('tpLoaderStyle').value=t.loaderStyle||'ring';
+  document.getElementById('tpLoaderText').value=t.loaderText||'CALENDAR';
+  document.getElementById('tpLoaderSub').value=t.loaderSub||'正在加载日历数据…';
   document.getElementById('tpShowBig').checked=t.showBigCalendar!==false;
   document.getElementById('tpShowA').checked=t.showCalA!==false;
   document.getElementById('tpShowB').checked=t.showCalB!==false;
@@ -1828,57 +1483,61 @@ function openTheme(){
   document.getElementById('tpShowBrandDot').checked=t.showBrandDot!==false;
   renderDayThemeList(t.themes);
   updateThemePreview();
+  updateLoaderPreview();
   document.getElementById('modalTheme').classList.add('show');
 }
 function renderSwatches(boxId,list,cur){
-  const box=document.getElementById(boxId);
-  if(!box)return;
-  box.innerHTML=list.map((p,i)=>
-    `<div class="tp-swatch ${p.v===cur?'sel':''}" style="background:${p.v}" title="${escapeHtml(p.label)}" onclick="pickSwatch('${boxId}',${i})"></div>`
-  ).join('');
+  const box=document.getElementById(boxId);if(!box)return;
+  box.innerHTML=list.map((p,i)=>`<div class="tp-swatch ${p.v===cur?'sel':''}" style="background:${p.v}" title="${escapeHtml(p.label)}" onclick="pickSwatch('${boxId}',${i})"></div>`).join('');
 }
 function pickSwatch(boxId,i){
   const isTop=boxId==='tpTopbarSwatches';
   const list=isTop?TOPBAR_PRESETS:PAGE_PRESETS;
   const v=list[i].v;
-  if(isTop){
-    tpTopbarVal=v;
-    document.getElementById('tpTopbarCustom').value=v;
-    renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,v);
-  }else{
-    tpBgVal=v;
-    document.getElementById('tpBgCustom').value=v;
-    renderSwatches('tpBgSwatches',PAGE_PRESETS,v);
-  }
+  if(isTop){tpTopbarVal=v;document.getElementById('tpTopbarCustom').value=v;renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,v);}
+  else{tpBgVal=v;document.getElementById('tpBgCustom').value=v;renderSwatches('tpBgSwatches',PAGE_PRESETS,v);}
   updateThemePreview();
 }
-function onTopbarCustom(){
-  tpTopbarVal=document.getElementById('tpTopbarCustom').value.trim();
-  renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
-  updateThemePreview();
+function onTopbarCustom(){tpTopbarVal=document.getElementById('tpTopbarCustom').value.trim();renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);updateThemePreview();}
+function onBgCustom(){tpBgVal=document.getElementById('tpBgCustom').value.trim();renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);updateThemePreview();}
+function onRadiusInput(){const r=parseInt(document.getElementById('tpRadius').value,10)||0;document.getElementById('tpRadiusVal').textContent=r+'px';updateThemePreview();}
+function renderLoaderBgSwatches(cur){
+  const box=document.getElementById('tpLoaderBgSwatches');if(!box)return;
+  box.innerHTML=LOADER_BG_PRESETS.map((p,i)=>`<div class="tp-swatch ${p.bg===cur?'sel':''}" style="background:${p.bg}" title="${escapeHtml(p.label)}" onclick="pickLoaderBg(${i})"></div>`).join('');
 }
-function onBgCustom(){
-  tpBgVal=document.getElementById('tpBgCustom').value.trim();
-  renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
-  updateThemePreview();
+function pickLoaderBg(i){
+  tpLoaderBg=LOADER_BG_PRESETS[i].bg;
+  document.getElementById('tpLoaderBgCustom').value=tpLoaderBg;
+  renderLoaderBgSwatches(tpLoaderBg);
+  updateLoaderPreview();
 }
-function onRadiusInput(){
-  const r=parseInt(document.getElementById('tpRadius').value,10)||0;
-  document.getElementById('tpRadiusVal').textContent=r+'px';
-  updateThemePreview();
+function onLoaderBgCustom(){tpLoaderBg=document.getElementById('tpLoaderBgCustom').value.trim();renderLoaderBgSwatches(tpLoaderBg);updateLoaderPreview();}
+function updateLoaderPreview(){
+  const style=document.getElementById('tpLoaderStyle').value;
+  const text=(document.getElementById('tpLoaderText').value||'CALENDAR').trim();
+  const sub=(document.getElementById('tpLoaderSub').value||'').trim();
+  const pv=document.getElementById('loaderPreview');
+  pv.style.background=tpLoaderBg||DISPLAY_DEFAULTS.loaderBg;
+  pv.style.backgroundSize='cover';pv.style.backgroundPosition='center';
+  const inner=document.getElementById('loaderPvInner');
+  let html='';
+  if(style==='ring')html=`<div class="lp-ring"></div>`;
+  else if(style==='dots')html=`<div class="lp-dots"><span></span><span></span><span></span></div>`;
+  else if(style==='wave')html=`<div class="lp-wave">${Array.from(text).map(c=>`<span>${escapeHtml(c)}</span>`).join('')}</div>`;
+  else if(style==='bar')html=`<div class="lp-bar"><span></span></div>`;
+  else if(style==='pulse')html=`<div class="lp-pulse"></div>`;
+  else{inner.innerHTML='<div class="lp-none">已关闭（跳过入场动画，直接进入主画面）</div>';return;}
+  if(style!=='wave'&&text)html+=`<div class="lp-text">${escapeHtml(text)}</div>`;
+  if(sub)html+=`<div class="lp-sub">${escapeHtml(sub)}</div>`;
+  inner.innerHTML=html;
 }
 function renderDayThemeList(themes){
-  const box=document.getElementById('tpThemeList');
-  if(!box)return;
+  const box=document.getElementById('tpThemeList');if(!box)return;
   box.innerHTML=DAY_DEFAULTS.map((d,i)=>{
     const t=(themes&&themes[i])||{};
     const color=/^#[0-9a-f]{6}$/i.test(t.color||'')?t.color:d.color;
     const img=t.img||'';
-    return `<div class="tp-day-row">
-      <span class="dn">${d.name}</span>
-      <input type="color" class="tp-color-sm" data-i="${i}" data-k="color" value="${color}" oninput="updateThemePreview()">
-      <input class="form-input" data-i="${i}" data-k="img" value="${escapeHtml(img)}" placeholder="自定义插图 URL（留空使用内置插图）" oninput="updateThemePreview()">
-    </div>`;
+    return `<div class="tp-day-row"><span class="dn">${d.name}</span><input type="color" class="tp-color-sm" data-i="${i}" data-k="color" value="${color}" oninput="updateThemePreview()"><input class="form-input" data-i="${i}" data-k="img" value="${escapeHtml(img)}" placeholder="自定义插图 URL" oninput="updateThemePreview()"></div>`;
   }).join('');
 }
 function readDayThemes(){
@@ -1906,6 +1565,10 @@ function readThemeForm(){
     accentA:document.getElementById('tpAccentA').value||'#3b82f6',
     accentB:document.getElementById('tpAccentB').value||'#e11d48',
     radius:isNaN(r)?16:r,
+    loaderStyle:document.getElementById('tpLoaderStyle').value||'ring',
+    loaderBg:tpLoaderBg||DISPLAY_DEFAULTS.loaderBg,
+    loaderText:(document.getElementById('tpLoaderText').value||'').trim()||'CALENDAR',
+    loaderSub:(document.getElementById('tpLoaderSub').value||'').trim(),
     loaderMs:isNaN(lm)?1400:lm,
     showBigCalendar:document.getElementById('tpShowBig').checked,
     showCalA:document.getElementById('tpShowA').checked,
@@ -1918,49 +1581,37 @@ function readThemeForm(){
 }
 function updateThemePreview(){
   const t=readThemeForm();
-  const tb=document.getElementById('pvTopbar');
-  if(tb)tb.style.background=t.topbarBg;
-  const ti=document.getElementById('pvTitle');
-  if(ti)ti.textContent=t.siteTitle;
-  const dot=document.getElementById('pvDot');
-  if(dot)dot.style.display=t.showBrandDot?'':'none';
-  const body=document.getElementById('pvBody');
-  if(body)body.style.background=t.pageBg;
+  const tb=document.getElementById('pvTopbar');if(tb)tb.style.background=t.topbarBg;
+  const ti=document.getElementById('pvTitle');if(ti)ti.textContent=t.siteTitle;
+  const dot=document.getElementById('pvDot');if(dot)dot.style.display=t.showBrandDot?'':'none';
+  const body=document.getElementById('pvBody');if(body)body.style.background=t.pageBg;
   const today=document.getElementById('pvToday');
-  if(today){
-    today.style.background=t.accentA;
-    today.style.color='#fff';
-    today.style.borderRadius=Math.min(t.radius,12)+'px';
-  }
-  const card=document.getElementById('pvCard');
-  if(card)card.style.borderRadius=Math.min(t.radius,14)+'px';
-  const bar=document.getElementById('pvBar');
-  if(bar)bar.style.background=t.accentB;
+  if(today){today.style.background=t.accentA;today.style.color='#fff';today.style.borderRadius=Math.min(t.radius,12)+'px';}
+  const card=document.getElementById('pvCard');if(card)card.style.borderRadius=Math.min(t.radius,14)+'px';
+  const bar=document.getElementById('pvBar');if(bar)bar.style.background=t.accentB;
 }
 async function saveTheme(){
   const t=readThemeForm();
-  try{
-    await saveSettingCloud('display_theme', t);
-    closeModal('modalTheme');
-    toast('展示页美化已保存并同步云端','success');
-  }catch(err){
-    console.error(err);
-    toast('保存失败：'+(err.message||err),'error');
-  }
+  try{await saveSettingCloud('display_theme',t);closeModal('modalTheme');toast('展示页美化已保存并同步云端','success');}
+  catch(err){console.error(err);toast('保存失败：'+(err.message||err),'error');}
 }
 function resetThemeForm(){
   document.getElementById('tpTitle').value=DISPLAY_DEFAULTS.siteTitle;
-  tpTopbarVal=DISPLAY_DEFAULTS.topbarBg;
-  tpBgVal=DISPLAY_DEFAULTS.pageBg;
+  tpTopbarVal=DISPLAY_DEFAULTS.topbarBg;tpBgVal=DISPLAY_DEFAULTS.pageBg;tpLoaderBg=DISPLAY_DEFAULTS.loaderBg;
   document.getElementById('tpTopbarCustom').value=tpTopbarVal;
   document.getElementById('tpBgCustom').value=tpBgVal;
+  document.getElementById('tpLoaderBgCustom').value=tpLoaderBg;
   renderSwatches('tpTopbarSwatches',TOPBAR_PRESETS,tpTopbarVal);
   renderSwatches('tpBgSwatches',PAGE_PRESETS,tpBgVal);
+  renderLoaderBgSwatches(tpLoaderBg);
   document.getElementById('tpAccentA').value=DISPLAY_DEFAULTS.accentA;
   document.getElementById('tpAccentB').value=DISPLAY_DEFAULTS.accentB;
   document.getElementById('tpRadius').value=DISPLAY_DEFAULTS.radius;
   document.getElementById('tpRadiusVal').textContent=DISPLAY_DEFAULTS.radius+'px';
   document.getElementById('tpLoader').value=String(DISPLAY_DEFAULTS.loaderMs);
+  document.getElementById('tpLoaderStyle').value='ring';
+  document.getElementById('tpLoaderText').value='CALENDAR';
+  document.getElementById('tpLoaderSub').value='正在加载日历数据…';
   document.getElementById('tpShowBig').checked=true;
   document.getElementById('tpShowA').checked=true;
   document.getElementById('tpShowB').checked=true;
@@ -1968,38 +1619,102 @@ function resetThemeForm(){
   document.getElementById('tpShowBrandDot').checked=true;
   renderDayThemeList([]);
   updateThemePreview();
+  updateLoaderPreview();
   toast('已恢复默认外观，点击「保存并应用」生效','info');
 }
 
-/* ============ Toast ============ */
+const PAGE404_DEFAULTS={enabled:false,emoji:'🚧',code:'404',title:'页面走丢了',subtitle:'你访问的页面不存在，或者已经被移动到别处。',btnText:'返回首页',btnUrl:'./index.html',theme:'aurora',customBg1:'#667eea',customBg2:'#764ba2',customBgCss:''};
+const P404_THEMES=[
+  {key:'aurora',label:'极光',bg:'linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)'},
+  {key:'starry',label:'星夜',bg:'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)'},
+  {key:'sunset',label:'暖阳',bg:'linear-gradient(135deg,#ff7e5f 0%,#feb47b 100%)'},
+  {key:'forest',label:'森野',bg:'linear-gradient(135deg,#134e5e 0%,#71b280 100%)'},
+  {key:'candy',label:'糖果',bg:'linear-gradient(135deg,#f093fb 0%,#f5576c 100%)'},
+  {key:'custom',label:'自定义双色',bg:'linear-gradient(135deg,#667eea,#764ba2)'}
+];
+function get404Bg(cfg){
+  if(cfg.customBgCss && cfg.customBgCss.trim())return cfg.customBgCss.trim();
+  if(cfg.theme==='custom')return `linear-gradient(135deg,${cfg.customBg1||'#667eea'} 0%,${cfg.customBg2||'#764ba2'} 100%)`;
+  const hit=P404_THEMES.find(t=>t.key===cfg.theme);
+  return hit?hit.bg:P404_THEMES[0].bg;
+}
+function open404Setting(){
+  const t=_p404Cache||{};
+  document.getElementById('p404Enabled').checked=t.enabled===true;
+  document.getElementById('p404Emoji').value=t.emoji||PAGE404_DEFAULTS.emoji;
+  document.getElementById('p404Code').value=t.code||PAGE404_DEFAULTS.code;
+  document.getElementById('p404Title').value=t.title||PAGE404_DEFAULTS.title;
+  document.getElementById('p404Subtitle').value=t.subtitle||PAGE404_DEFAULTS.subtitle;
+  document.getElementById('p404BtnText').value=t.btnText||PAGE404_DEFAULTS.btnText;
+  document.getElementById('p404BtnUrl').value=t.btnUrl||PAGE404_DEFAULTS.btnUrl;
+  document.getElementById('p404Bg1').value=t.customBg1||PAGE404_DEFAULTS.customBg1;
+  document.getElementById('p404Bg2').value=t.customBg2||PAGE404_DEFAULTS.customBg2;
+  document.getElementById('p404BgCss').value=t.customBgCss||'';
+  render404Themes(t.theme||'aurora');
+  update404Preview();
+  document.getElementById('modal404').classList.add('show');
+}
+function render404Themes(cur){
+  const box=document.getElementById('p404ThemeSwatches');if(!box)return;
+  box.innerHTML=P404_THEMES.map(t=>`<div class="tp-swatch ${t.key===cur?'sel':''}" data-key="${t.key}" style="background:${t.bg}" title="${t.label}" onclick="pick404Theme('${t.key}')"></div>`).join('');
+  const customRow=document.getElementById('p404CustomRow');
+  if(customRow)customRow.style.display=cur==='custom'?'':'none';
+}
+function pick404Theme(k){render404Themes(k);update404Preview();}
+function read404Form(){
+  const sel=document.querySelector('#p404ThemeSwatches .tp-swatch.sel');
+  const theme=sel?sel.dataset.key:'aurora';
+  return {
+    enabled:document.getElementById('p404Enabled').checked,
+    emoji:(document.getElementById('p404Emoji').value||'').trim()||'🚧',
+    code:(document.getElementById('p404Code').value||'').trim()||'404',
+    title:(document.getElementById('p404Title').value||'').trim()||'页面走丢了',
+    subtitle:(document.getElementById('p404Subtitle').value||'').trim(),
+    btnText:(document.getElementById('p404BtnText').value||'').trim()||'返回首页',
+    btnUrl:(document.getElementById('p404BtnUrl').value||'').trim()||'./index.html',
+    theme:theme,
+    customBg1:document.getElementById('p404Bg1').value||PAGE404_DEFAULTS.customBg1,
+    customBg2:document.getElementById('p404Bg2').value||PAGE404_DEFAULTS.customBg2,
+    customBgCss:(document.getElementById('p404BgCss').value||'').trim(),
+    updatedAt:Date.now()
+  };
+}
+function update404Preview(){
+  const cfg=read404Form();
+  document.getElementById('p404PvEmoji').textContent=cfg.emoji;
+  document.getElementById('p404PvCode').textContent=cfg.code;
+  document.getElementById('p404PvTitle').textContent=cfg.title;
+  document.getElementById('p404PvSub').textContent=cfg.subtitle||'（副标题为空）';
+  document.getElementById('p404PvBtn').textContent=cfg.btnText;
+  const pv=document.getElementById('p404Preview');
+  pv.style.background=get404Bg(cfg);
+  pv.style.backgroundSize='cover';pv.style.backgroundPosition='center';
+  const customRow=document.getElementById('p404CustomRow');
+  if(customRow)customRow.style.display=(cfg.theme==='custom')?'':'none';
+}
+async function save404Setting(){
+  const cfg=read404Form();
+  try{await saveSettingCloud('page_404',cfg);_p404Cache=cfg;closeModal('modal404');toast(cfg.enabled?'404 状态已启用并同步云端':'404 设置已保存（未启用）','success');}
+  catch(err){console.error(err);toast('保存失败：'+(err.message||err),'error');}
+}
+
 function toast(msg,type='info'){
   const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
   document.getElementById('toastContainer').appendChild(t);
   setTimeout(()=>{t.style.opacity=0;t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2600);
 }
 
-/* ============ 启动 ============ */
 (async function boot(){
   initCloud();
   updateSyncBadge();
-  try{
-    await refreshAllFromCloud();
-  }catch(err){
-    console.error('初始化拉取失败：', err);
-    toast('云端读取失败，已切换到本地缓存','error');
-  }
+  try{await refreshAllFromCloud();}
+  catch(err){console.error('初始化拉取失败：',err);toast('云端读取失败，已切换到本地缓存','error');}
   setupDrop();
   renderColorPicker();
   render();
   document.getElementById('evDate').value=formatDate(new Date());
-
-  window.addEventListener('focus', async ()=>{
-    try{ await refreshAllFromCloud(); }catch(e){}
-  });
-  setInterval(async ()=>{
-    if(document.visibilityState!=='visible')return;
-    try{ await refreshAllFromCloud(); }catch(e){}
-  }, 300000);
+  window.addEventListener('focus',async()=>{try{await refreshAllFromCloud();}catch(e){}});
+  setInterval(async()=>{if(document.visibilityState!=='visible')return;try{await refreshAllFromCloud();}catch(e){}},300000);
 })();
 </script>
 </body>
