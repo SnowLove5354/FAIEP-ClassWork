@@ -234,7 +234,6 @@ textarea.form-input{resize:vertical;min-height:70px;}
 .lp-text{font-size:16px;font-weight:300;letter-spacing:4px;margin-top:4px;}
 .lp-sub{font-size:12px;opacity:.6;letter-spacing:2px;margin-top:6px;}
 .lp-none{font-size:13px;opacity:.7;}
-/* ✅ 修复1：通用 .tp-color-sm，主题色选择器（位于 .tp-day-title 内）也能正确显示 */
 .tp-color-sm{width:34px;height:30px;border:1px solid #e5e6eb;border-radius:6px;padding:2px;background:#fff;cursor:pointer;flex-shrink:0;}
 .tp-day-card{background:#fff;border:1px solid #e5e6eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;}
 .tp-day-card:last-child{margin-bottom:0;}
@@ -300,7 +299,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
       <button class="btn-secondary" onclick="openTermSetting()">🎓 教学周设置</button>
       <button class="btn-secondary" onclick="openTheme()">🎨 展示页美化</button>
       <button class="btn-secondary" onclick="open404Setting()">🚧 404 状态设置</button>
-      <button class="btn-danger-outline" onclick="clearAll()">🗑 清空全部</button>
+      <!-- ✅ 按钮改为动态文案：跟随当前筛选范围 -->
+      <button class="btn-danger-outline" id="btnClearAll" onclick="clearAll()">🗑 清空全部日程</button>
     </div>
   </aside>
 
@@ -327,8 +327,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
 
     <div class="stats">
       <div class="stat-card blue"><div class="label">日程总数</div><div class="value" id="statTotal">0</div><div class="trend" id="statTodayText">今日 0 项</div></div>
-      <div class="stat-card purple"><div class="label">日历A 政务日程</div><div class="value" id="statA">0</div><div class="trend">商务蓝 · 单色</div></div>
-      <div class="stat-card green"><div class="label">日历B 教学日历</div><div class="value" id="statB">0</div><div class="trend">彩色主题</div></div>
+      <div class="stat-card purple"><div class="label">日历A 政务日程</div><div class="value" id="statA">0</div><div class="trend">政务蓝 · 单色</div></div>
+      <div class="stat-card green"><div class="label">日历B 教学日历</div><div class="value" id="statB">0</div><div class="trend">教学绿 · 彩色</div></div>
     </div>
 
     <div class="event-list">
@@ -348,7 +348,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
         <label class="form-label">归属日历<span class="req">*</span></label>
         <div class="calendar-picker">
           <div class="cal-option selected" data-cal="A" onclick="selectCal('A')"><div class="cal-icon">📅</div><div class="cal-name">日历A</div><div class="cal-desc">政务日程 · 蓝色</div></div>
-          <div class="cal-option" data-cal="B" onclick="selectCal('B')"><div class="cal-icon">🎨</div><div class="cal-name">日历B</div><div class="cal-desc">教学日历 · 彩色</div></div>
+          <div class="cal-option" data-cal="B" onclick="selectCal('B')"><div class="cal-icon">🎨</div><div class="cal-name">日历B</div><div class="cal-desc">教学日程 · 彩色</div></div>
         </div>
       </div>
       <div class="form-group"><label class="form-label">日程标题<span class="req">*</span></label><input class="form-input" id="evTitle" placeholder="请输入日程标题，例如：周会、项目评审"></div>
@@ -665,10 +665,23 @@ async function deleteEventCloud(id){
   if(error)throw error;
   await fetchEvents();
 }
-async function clearAllEventsCloud(){
-  if(!_cloudEnabled){writeLocalEvents([]);_eventsCache=[];return;}
-  const {error}=await sb.from(CLOUD_EVENTS_TABLE).delete().neq('id','');
-  if(error)throw error;
+/* ✅ 改造：按归属日历清空；calId='all' 时清空全部 */
+async function clearAllEventsCloud(calId){
+  const target = (calId==='all'||calId==null) ? null : calId;
+  if(!_cloudEnabled){
+    let list=readLocalEvents();
+    list = target ? list.filter(e=>e.calendarId!==target) : [];
+    writeLocalEvents(list);
+    _eventsCache = list;
+    return;
+  }
+  if(target){
+    const {error}=await sb.from(CLOUD_EVENTS_TABLE).delete().eq('calendar_id',target);
+    if(error)throw error;
+  }else{
+    const {error}=await sb.from(CLOUD_EVENTS_TABLE).delete().neq('id','');
+    if(error)throw error;
+  }
   await fetchEvents();
 }
 async function bulkInsertEventsCloud(rows){
@@ -737,6 +750,15 @@ function repeatLabel(r){
 }
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+/* ✅ 新增：根据 filterCal 更新清空按钮文案 */
+function updateClearAllBtn(){
+  const btn=document.getElementById('btnClearAll');
+  if(!btn)return;
+  if(filterCal==='all'){btn.textContent='🗑 清空全部日程';}
+  else if(filterCal==='A'){btn.textContent='🗑 清空日历A';}
+  else if(filterCal==='B'){btn.textContent='🗑 清空日历B';}
+}
+
 function render(){
   const all=loadEvents().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.startTime||'').localeCompare(b.startTime||''));
   const a=all.filter(e=>e.calendarId==='A');
@@ -754,6 +776,7 @@ function render(){
   }).length;
   document.getElementById('statTodayText').textContent=`今日 ${todayCnt} 项`;
   document.querySelectorAll('.cal-switch').forEach(el=>{el.classList.toggle('active',el.dataset.cal===filterCal);});
+  updateClearAllBtn();
 
   const kw=(document.getElementById('filterKeyword')?.value||'').trim().toLowerCase();
   const df=document.getElementById('filterDateFrom')?.value||'';
@@ -924,7 +947,7 @@ function resetFilters(){
   render();
 }
 function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function setFilter(c){filterCal=c;currentPage=1;render();}
+function setFilter(c){filterCal=c;currentPage=1;updateClearAllBtn();render();}
 
 function openCreate(){
   editingId=null;
@@ -998,7 +1021,7 @@ function renderColorPicker(){
   const colors=selCalInForm==='A'?COLORS_A:COLORS_B;
   const box=document.getElementById('colorPicker');
   let html=colors.map(c=>`<div class="color-dot ${c===selColor?'sel':''}" style="background:${c};color:${c};" onclick="pickColor('${c}')"></div>`).join('');
-  html+=selCalInForm==='A'?'<span class="color-tip">政务日程使用统一的商务蓝色</span>':'<span class="color-tip">教学日历可选多种彩色</span>';
+  html+=selCalInForm==='A'?'<span class="color-tip">商务日程使用统一的商务蓝色</span>':'<span class="color-tip">主题日历可选多种彩色</span>';
   box.innerHTML=html;
 }
 function pickColor(c){selColor=c;renderColorPicker();}
@@ -1072,13 +1095,26 @@ async function delEvent(id){
   try{await deleteEventCloud(id);render();toast('已删除','info');}
   catch(err){console.error(err);toast('删除失败：'+(err.message||err),'error');}
 }
+
+/* ✅ 改造：按 filterCal 清空对应日历的全部日程 */
 async function clearAll(){
-  const n=loadEvents().length;
-  if(!n){toast('当前没有日程','info');return;}
-  if(!confirm(`确定清空全部 ${n} 条日程？此操作不可恢复。`))return;
-  try{await clearAllEventsCloud();render();toast('已清空全部日程','info');}
-  catch(err){console.error(err);toast('清空失败：'+(err.message||err),'error');}
+  const scope = filterCal;
+  const scopeLabel = scope==='all' ? '全部日历' : (scope==='A' ? '日历A · 政务日程' : '日历B · 教学日历');
+  const list = loadEvents();
+  const target = scope==='all' ? list : list.filter(e=>e.calendarId===scope);
+  const count = target.length;
+  if(!count){toast(`「${scopeLabel}」当前没有日程`,'info');return;}
+  if(!confirm(`确定清空「${scopeLabel}」的 ${count} 条日程？\n此操作不可恢复。`))return;
+  try{
+    await clearAllEventsCloud(scope);
+    render();
+    toast(`已清空「${scopeLabel}」的 ${count} 条日程`,'success');
+  }catch(err){
+    console.error(err);
+    toast('清空失败：'+(err.message||err),'error');
+  }
 }
+
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 const DEFAULT_PERIODS=[{s:'08:00',e:'08:45'},{s:'08:50',e:'09:35'},{s:'09:50',e:'10:35'},{s:'10:40',e:'11:25'},{s:'13:30',e:'14:15'},{s:'14:20',e:'15:05'},{s:'15:20',e:'16:05'},{s:'16:10',e:'16:55'},{s:'18:30',e:'19:15'},{s:'19:20',e:'20:05'},{s:'20:10',e:'20:55'},{s:'21:00',e:'21:45'}];
@@ -1562,7 +1598,6 @@ function updateLoaderPreview(){
   if(sub)html+=`<div class="lp-sub">${escapeHtml(sub)}</div>`;
   inner.innerHTML=html;
 }
-/* ✅ 修复2+3：resetBg 同步重置取色器；colorPickerVal 支持 3 位 hex */
 function renderDayThemeList(themes){
   const box=document.getElementById('tpThemeList');
   if(!box)return;
@@ -1619,7 +1654,6 @@ function resetImg(i){
   const inp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="img"]`);
   if(inp){inp.value=BUILTIN_IMGS[i];updateThemePreview();}
 }
-/* ✅ 修复2：resetBg 同时重置文本和取色器 */
 function resetBg(i){
   const inp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBg"]`);
   const cInp=document.querySelector(`#tpThemeList input[data-i="${i}"][data-k="picBgColor"]`);
@@ -1784,6 +1818,7 @@ function toast(msg,type='info'){
   setupDrop();
   renderColorPicker();
   render();
+  updateClearAllBtn();
   document.getElementById('evDate').value=formatDate(new Date());
   window.addEventListener('focus',async()=>{try{await refreshAllFromCloud();}catch(e){}});
   setInterval(async()=>{if(document.visibilityState!=='visible')return;try{await refreshAllFromCloud();}catch(e){}},300000);
